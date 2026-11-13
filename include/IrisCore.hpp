@@ -122,6 +122,13 @@ IRIS_EXPORT Result viewer_engine_translate          (const Viewer& viewer, const
 IRIS_EXPORT Result viewer_engine_zoom               (const Viewer& viewer, const ViewerZoomScope&) noexcept;
 
 /**
+ * @brief Turn the scope view about a point in it when rendering a whole slide image.
+ *
+ * @param viewer Iris::Viewer handle
+ */
+IRIS_EXPORT Result viewer_engine_rotate             (const Viewer& viewer, const ViewerRotateScope&) noexcept;
+
+/**
  * @brief Insert an image slide annotation into the current active slide at the location within the screen.
  * 
  * @param viewer Iris::Viewer handle

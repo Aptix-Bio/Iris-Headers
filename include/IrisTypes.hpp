@@ -319,6 +319,8 @@ struct IRIS_EXPORT ViewerResizeSurfaceInfo {
  * 
  */
 struct IRIS_EXPORT ViewerTranslateScope {
+    // The slide follows the sign, as a drag moves it: +x right, +y down. The
+    // velocities are not applied yet: the engine has no inertia.
     /// @brief Fraction of *horizontal* viewspace to translate [-1,1](-left, +right)
     float               x_translate = 0.f;
     /// @brief Fraction of *vertical* viewspace to translate [-1,1](-left, +right)
@@ -344,6 +346,23 @@ struct IRIS_EXPORT ViewerZoomScope {
     /// @brief Horizontal location of zoom origin (towards or way from this point)
     float               x_location  = 0.5f;
     /// @brief Vertical location of zoom origin
+    float               y_location  = 0.5f;
+};
+/**
+ * @brief Information to turn the rendered scope view about a point in it.
+ *
+ * A positive angle turns the slide counterclockwise as seen on screen. The
+ * slide point under the origin (x_location, y_location, fractions of the view
+ * from its top left) stays where it is, as a zoom's does; the cursor location
+ * or the view centre (0.5, 0.5) suits it best.
+ *
+ */
+struct IRIS_EXPORT ViewerRotateScope {
+    /// @brief Angle to turn the slide, in radians, counterclockwise on screen [-pi, pi]
+    float               radians     = 0.f;
+    /// @brief Horizontal location of the turn's origin [0, 1]
+    float               x_location  = 0.5f;
+    /// @brief Vertical location of the turn's origin [0, 1]
     float               y_location  = 0.5f;
 };
 /**
