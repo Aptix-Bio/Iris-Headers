@@ -1,0 +1,182 @@
+# DownstreamBuild_1.2 (development/MODERNIZATION.md, SafetyNet_1).
+#
+# A header change is correct only relative to what consumes it, so this builds
+# the consumers against the change, and against the base when that fails (the
+# control run), on every pull request and every push to main. Verdict per
+# consumer cell:
+#   change green                              -> pass
+#   change red, base green                    -> this change broke it: fail
+#   change red, base red at build or test     -> already broken: warn, pass
+#   any configure failure                     -> the cell's tooling is broken: fail
+# Failing on configure keeps a cell that cannot build anything from passing as
+# "already broken". No secret is used here; the consumers' own CI is triggered
+# only when a pull request merges (trigger-downstream.yml).
+name: downstream
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: downstream-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  standalone-headers:
+    name: Headers compile alone (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          - { os: macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          # The default Visual Studio generator with its ClangCL toolset (Iris-Core D38).
+          - { os: windows-2025, configure: "-T ClangCL" }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build
+      - name: Build the standalone-header check with Clang
+        env:
+          CONFIGURE: ${{ matrix.configure }}
+        run: |
+          # shellcheck disable=SC2086  # CONFIGURE is a list of flags from the matrix
+          cmake -S . -B build $CONFIGURE -DIRIS_HEADERS_CHECK_STANDALONE=ON
+          cmake --build build --config Release
+
+  type-tests:
+    name: Type tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          - { os: macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          # The first build of MemoryArena's Windows path (WindowsPaths_4.7).
+          - { os: windows-2025, configure: "-T ClangCL" }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build
+      - name: Build and run the type tests (TypeTests_1.3)
+        env:
+          CONFIGURE: ${{ matrix.configure }}
+        run: |
+          # shellcheck disable=SC2086  # CONFIGURE is a list of flags from the matrix
+          cmake -S . -B build $CONFIGURE -DCMAKE_BUILD_TYPE=Release -DIRIS_HEADERS_BUILD_TYPE_TESTS=ON
+          cmake --build build --config Release
+          ctest --test-dir build -C Release --output-on-failure --no-tests=error
+
+  consumer:
+    name: ${{ matrix.consumer }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # IFE: self-contained and fast; Windows is where macro collisions bite.
+          - { consumer: Iris-File-Extension, os: ubuntu-24.04, test: true,
+              options: "-DIFE_BUILD_TESTS=ON" }
+          - { consumer: Iris-File-Extension, os: macos-15, test: true,
+              options: "-DIFE_BUILD_TESTS=ON" }
+          - { consumer: Iris-File-Extension, os: windows-2025, test: true,
+              options: "-DIFE_BUILD_TESTS=ON" }
+          # Iris-Codec: decoder only, a build check; the encoder pulls OpenSlide
+          # and the image codecs. IRIS_DEPS_OWNER pins whose Iris-File-Extension
+          # it fetches; otherwise it follows GITHUB_REPOSITORY, this repository's owner.
+          - { consumer: Iris-Codec, os: ubuntu-24.04, test: false,
+              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=IrisDigitalPathology" }
+          - { consumer: Iris-Codec, os: macos-15, test: false,
+              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=IrisDigitalPathology" }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: This change
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: change
+          persist-credentials: false
+      - name: The base (control)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: base
+          ref: ${{ github.event.pull_request.base.sha || github.event.before || 'main' }}
+          persist-credentials: false
+      - name: The consumer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: IrisDigitalPathology/${{ matrix.consumer }}
+          path: consumer
+          persist-credentials: false
+      # Iris-Codec builds libdicom with Meson.
+      - name: Install Ninja and Meson (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build meson
+      - name: Install Meson (macOS)
+        if: runner.os == 'macOS'
+        run: brew install meson
+      - name: Build against the change, then the base
+        env:
+          OPTIONS: ${{ matrix.options }}
+          RUN_TESTS: ${{ matrix.test }}
+        run: |
+          # Clang everywhere (Iris-Core D38): clang-cl through the default Visual
+          # Studio generator's ClangCL toolset on Windows.
+          generator=(-G Ninja -DCMAKE_CXX_COMPILER=clang++)
+          if [[ "$RUNNER_OS" == "Windows" ]]; then generator=(-T ClangCL); fi
+          # Exit codes: 0 green, 1 red at build or test, 2 red at configure.
+          build() {
+            local headers="$1" out="$2"
+            # shellcheck disable=SC2086  # OPTIONS is a list of -D flags from the matrix
+            cmake -S consumer -B "$out" "${generator[@]}" -DCMAKE_BUILD_TYPE=Release \
+              -DFETCHCONTENT_SOURCE_DIR_IRISHEADERS="$PWD/$headers" $OPTIONS || return 2
+            cmake --build "$out" --config Release --parallel || return 1
+            if [[ "$RUN_TESTS" == "true" ]]; then
+              ctest --test-dir "$out" -C Release --output-on-failure --no-tests=error || return 1
+            fi
+          }
+          change=0; build change build-change || change=$?
+          if [[ $change -eq 0 ]]; then echo "change: green"; exit 0; fi
+          if [[ $change -eq 2 ]]; then
+            echo "::error::The consumer does not configure against the change: the cell's tooling is broken."
+            exit 1
+          fi
+          echo "change: red at build or test"
+          base=0; build base build-base || base=$?
+          if [[ $base -eq 0 ]]; then
+            echo "::error::This change breaks the consumer: it builds against the base and fails against the change."
+            exit 1
+          fi
+          if [[ $base -eq 2 ]]; then
+            echo "::error::The consumer does not configure against the base: the cell's tooling is broken."
+            exit 1
+          fi
+          echo "::warning::The consumer fails against the base too: already broken, not blocked by this change."

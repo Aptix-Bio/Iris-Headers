@@ -1,0 +1,87 @@
+# BUILD.bazel — Bazel build for Iris-Headers.
+#
+# This repository deliberately compiles nothing up front: consumers pick the
+# sources they need (the same contract as the CMake install, where IrisHeaders
+# is an INTERFACE library and each consumer compiles the src/*.cpp files it
+# wants). One cc_library per source, so a component that nobody references is
+# never built — Bazel only compiles what the target graph reaches.
+#
+# IFE consumes exactly: :iris_headers (headers), :iris_buffer, :iris_memory.
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Bazel's MSVC wrapper does not translate -std=c++20 → /std:c++20, so pass
+# both (same workaround as FastFHIR/BUILD.bazel).
+_COPTS = ["-std=c++20"] + select({
+    "@bazel_tools//src/conditions:windows": ["/std:c++20"],
+    "//conditions:default": [],
+})
+
+cc_library(
+    name = "iris_headers",
+    hdrs = glob(["include/*.hpp", "priv/*.hpp"]),
+    copts = _COPTS,
+    # Both directories are part of the surface: include/ is the documented
+    # API; priv/ is what src/*.cpp compile against, and IFE's
+    # ife_large_file_tests includes priv/IrisMemory.hpp directly.
+    includes = ["include", "priv"],
+)
+
+# The src/*.cpp files define functions declared with IRIS_EXPORT in the
+# public headers. IRIS_EXPORT_API=true is the "building the library" side of
+# the macro (dllexport on MSVC); left undefined, IrisTypes.hpp picks
+# dllimport, which is wrong for the translation unit that defines them.
+cc_library(
+    name = "iris_buffer",
+    srcs = ["src/IrisBuffer.cpp"],
+    copts = _COPTS,
+    local_defines = ["IRIS_EXPORT_API=true"],
+    deps = [":iris_headers"],
+)
+
+# create_memory returns and constructs Iris::Result, whose methods are
+# declared IRIS_EXPORT in IrisTypes.hpp — so, like the other src/*.cpp
+# targets, the defining TU must compile on the "building the library" side of
+# the macro (dllexport on MSVC). Without it, MSVC treats every Result
+# construction as dllimport and the link fails (IFE's Windows Bazel CI hit
+# exactly this: LNK2019 on __imp_??0Result).
+cc_library(
+    name = "iris_memory",
+    srcs = ["src/IrisMemory.cpp"],
+    copts = _COPTS,
+    local_defines = ["IRIS_EXPORT_API=true"],
+    deps = [":iris_headers"],
+)
+
+cc_library(
+    name = "iris_async",
+    srcs = ["src/IrisAsync.cpp"],
+    copts = _COPTS,
+    local_defines = ["IRIS_EXPORT_API=true"],
+    deps = [":iris_headers"],
+)
+
+# TypeTests_1.3 and AsyncRebuilt_4.12: the same Catch2 tests CMake builds as
+# IrisTypesTests, so the queue and the pool are tested under both builds.
+cc_test(
+    name = "iris_types_test",
+    size = "small",
+    srcs = ["tests/types_test.cpp"],
+    copts = _COPTS,
+    local_defines = ["IRIS_EXPORT_API=true"],
+    deps = [
+        ":iris_async",
+        ":iris_buffer",
+        ":iris_headers",
+        ":iris_memory",
+        "@catch2//:catch2_main",
+    ],
+)
+
+# iris_simd is deliberately absent: src/IrisSIMD.cpp includes <hwy/highway.h>
+# (Google Highway), and no current consumer needs it. When one does, add
+# bazel_dep(name = "highway", version = <BCR>) to MODULE.bazel and a
+# cc_library with srcs = ["src/IrisSIMD.cpp"],
+# deps = [":iris_headers", "@highway//:highway"] — verifying the highway
+# target name against that module's BUILD at the time, not guessing it now.

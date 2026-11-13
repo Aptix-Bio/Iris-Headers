@@ -1,0 +1,66 @@
+# DownstreamBuild_1.2: when a pull request closes by merging, start each
+# consumer's own CI against the merged commit (Ryan, 2026-11-12: "we should
+# make sure to trigger downstream dependency repos CIs as well"; "Only for
+# closing PRs"). A merge lands as a push to main, so this runs on that push and
+# dispatches only when GitHub associates the pushed commit with a merged pull
+# request; a direct push dispatches nothing. Running on push instead of
+# pull_request_target keeps every input trusted: the event carries no
+# pull-request data, and nothing from a pull request is checked out or run.
+# The token comes from a GitHub App installed only on the consumers, with
+# Actions write and nothing else: it can start a workflow run and cannot push
+# code (workflow_dispatch needs Actions write; repository_dispatch would need
+# Contents write).
+name: trigger-downstream
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: downstream-dispatch
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Only a commit that merged a pull request dispatches
+        id: merged
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          count=$(gh api "repos/$REPOSITORY/commits/$COMMIT/pulls" --jq '[.[] | select(.merged_at != null)] | length')
+          echo "merged pull requests for $COMMIT: $count"
+          echo "dispatch=$([[ "$count" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: Token for the consumers, Actions write only
+        if: steps.merged.outputs.dispatch == 'true'
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.DOWNSTREAM_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DOWNSTREAM_APP_PRIVATE_KEY }}
+          owner: IrisDigitalPathology
+          repositories: Iris-File-Extension,Iris-Codec
+          permission-actions: write
+      - name: Start each consumer's CI against the merge commit
+        if: steps.merged.outputs.dispatch == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          MERGED: ${{ github.sha }}
+        run: |
+          # One line per consumer workflow; each accepts workflow_dispatch with
+          # an iris_headers_ref input (added in that repository).
+          while read -r repository workflow; do
+            gh api --method POST "repos/IrisDigitalPathology/$repository/actions/workflows/$workflow/dispatches" \
+              -f ref=main -f "inputs[iris_headers_ref]=$MERGED"
+            echo "dispatched $repository/$workflow at $MERGED"
+          done <<'CONSUMERS'
+          Iris-File-Extension ci.yml
+          Iris-Codec cmake-linux-CI.yml
+          Iris-Codec cmake-macos-CI.yml
+          Iris-Codec cmake-win64-CI.yml
+          CONSUMERS

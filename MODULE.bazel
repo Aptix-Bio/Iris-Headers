@@ -1,0 +1,18 @@
+module(
+    name = "iris_headers",
+    version = "0.2.0",
+)
+
+# Apple's C++ toolchain, listed before rules_cc so it is chosen on macOS:
+# Bazel's built-in macOS toolchain rejects the Xcode SDK's SDKSettings.json as
+# an absolute include, which failed every target here (measured 2026-11-12,
+# Bazel 9.3.2, Xcode's Apple clang 21). Version from
+# https://bcr.bazel.build/modules/apple_support (read 2026-11-12). A
+# development dependency: a consumer's own module chooses its toolchain.
+bazel_dep(name = "apple_support", version = "2.12.0", dev_dependency = True)
+bazel_dep(name = "rules_cc",  version = "0.2.17")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# The type tests (tests/types_test.cpp), at the version CMake fetches. A
+# development dependency: a consumer of this module does not resolve it.
+bazel_dep(name = "catch2", version = "3.15.1", dev_dependency = True)
