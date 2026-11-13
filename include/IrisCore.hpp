@@ -86,6 +86,35 @@ IRIS_EXPORT Result viewer_window_resized            (const Viewer& viewer) noexc
 IRIS_EXPORT Result viewer_display_refreshed         (const Viewer& viewer) noexcept;
 
 /**
+ * @brief Post one message from the interface to the viewer's engine.
+ *
+ * The one entry for the interface's messages (the funnel): the bytes are one
+ * Envelope of Iris-Core's bridge schema, built by the interface and passed
+ * through unread by the host. The engine verifies every field and range on the
+ * calling thread, failing with the field it rejects, then queues the message
+ * for its engine thread, which applies it at its next frame. Any thread; the
+ * call never waits.
+ *
+ * @param info the viewer and the Envelope's bytes
+ */
+IRIS_EXPORT Result viewer_post                      (const ViewerPostInfo& info) noexcept;
+
+/**
+ * @brief Route a pointer event: the interface's control under the pointer, or the slide.
+ *
+ * Answered on the calling thread from the regions the interface last published
+ * through viewer_post, as AppKit's hitTest answers: the deepest, topmost region
+ * under the pointer, then up its ancestors to the first that takes the event,
+ * else the slide view. Call it for each event that starts a gesture (a press,
+ * a scroll); it reads only the engine's published snapshot and never waits.
+ *
+ * @param info the viewer and the pointer's location
+ * @param responder receives where the event goes; left unchanged on failure
+ */
+IRIS_EXPORT Result viewer_route_pointer             (const ViewerRoutePointerInfo& info,
+                                                     ViewerPointerResponder& responder) noexcept;
+
+/**
  * @brief Create and open a slide for viewing. 
  * 
  * This will close any currently opened slide within the viewer and 
@@ -107,9 +136,14 @@ IRIS_EXPORT Result viewer_open_slide                (const Viewer& viewer, const
  */
 IRIS_EXPORT Result viewer_close_slide               (const Viewer& viewer) noexcept;
 
+//  The host's own input devices (a drag, a trackpad's scroll, a mouse wheel, a
+//  pinch, a twist over the slide) move the view through these three calls,
+//  called from the host's native event loop. They are never sent as bridge
+//  messages through viewer_post, which carries what the interface says.
+
 /**
  * @brief Translate the scope view when rendering a whole slide image.
- * 
+ *
  * @param viewer Iris::Viewer handle
  */
 IRIS_EXPORT Result viewer_engine_translate          (const Viewer& viewer, const ViewerTranslateScope&) noexcept;

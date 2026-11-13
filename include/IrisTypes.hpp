@@ -366,6 +366,44 @@ struct IRIS_EXPORT ViewerRotateScope {
     float               y_location  = 0.5f;
 };
 /**
+ * @brief One message for the viewer's engine: the bytes of one Envelope of
+ * Iris-Core's bridge schema (bridge/protocol.fbs).
+ *
+ * The bytes are the interface's, passed through unread by the host; the engine
+ * verifies them and copies what it keeps, so they may be freed once the call
+ * returns.
+ */
+struct IRIS_EXPORT ViewerPostInfo {
+    const Viewer        viewer      = nullptr;
+    /// @brief The Envelope's first byte; null only when size is 0
+    const uint8_t*      bytes       = nullptr;
+    /// @brief The Envelope's length in bytes
+    size_t              size        = 0;
+};
+/**
+ * @brief Where a pointer event over the viewer goes: the slide view, which
+ * pans, zooms and turns, or the interface drawn over it.
+ */
+enum class ViewerPointerResponder : uint8_t {
+    /// @brief The host's own view takes the event: nothing of the interface is under it
+    SLIDE       = 0,
+    /// @brief The interface's webview takes the event: one of its controls is under it
+    INTERFACE   = 1,
+};
+/**
+ * @brief A pointer's location over the viewer, to route it to the interface or the slide.
+ *
+ * In points from the view's top left: the CSS pixels the interface lays out in,
+ * which are AppKit's points and Win32's device-independent pixels.
+ */
+struct IRIS_EXPORT ViewerRoutePointerInfo {
+    const Viewer        viewer      = nullptr;
+    /// @brief Points from the view's left edge
+    float               x_location  = 0.f;
+    /// @brief Points from the view's top edge
+    float               y_location  = 0.f;
+};
+/**
  * @brief Defines the image encoding format for an image annotation.
  * 
  */
