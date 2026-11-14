@@ -48,6 +48,12 @@
 #define NOMINMAX
 #endif
 #include <Windows.h>
+#elif defined __linux__
+// Wayland's connection and surface, named without its headers: the binding
+// below holds pointers to them only. Declared here, at global scope, so they
+// are Wayland's own ::wl_display and ::wl_surface and not new types in Iris.
+struct wl_display;
+struct wl_surface;
 #endif
 
 #ifndef IRIS_EXPORT_API
@@ -290,6 +296,11 @@ struct IRIS_EXPORT ViewerCreateInfo {
  *  - Windows: requires HINSTANCE and HWND handles from the WIN32 API
  *  - Apple: macOS and iOS require a __bridge pointer to a CAMetalLayer
  *  - Web (Emscripten): the CSS selector of the page's <canvas>, e.g. "#iris"
+ *  - Linux (Wayland only; X11 is not supported): the host's wl_display and the
+ *    wl_surface the engine renders into. Neither is reference counted, and
+ *    Vulkan uses the connection until the surface's swapchain is destroyed,
+ *    which viewer_unbind_surface does not yet promise: the host keeps both
+ *    until the viewer itself is destroyed.
  * 
  */
 struct IRIS_EXPORT ViewerBindExternalSurfaceInfo {
@@ -301,6 +312,9 @@ struct IRIS_EXPORT ViewerBindExternalSurfaceInfo {
     const char*         canvas      = nullptr;
 #elif defined __APPLE__
     const void*         layer       = nullptr; 
+#elif defined __linux__
+    wl_display*         display     = nullptr;
+    wl_surface*         surface     = nullptr;
 #endif
 };
 
