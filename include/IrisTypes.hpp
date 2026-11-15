@@ -381,6 +381,24 @@ struct IRIS_EXPORT ViewerPostInfo {
     size_t              size        = 0;
 };
 /**
+ * @brief The most bytes one Batch from the engine to the interface may take,
+ * so a host takes every Batch into storage of this many bytes, allocated once.
+ */
+inline constexpr size_t VIEWER_BATCH_MAX_BYTES = 65536;
+/**
+ * @brief Where to take the engine's next message for the interface: one
+ * Batch of Iris-Core's bridge schema (bridge/protocol.fbs).
+ *
+ * The bytes are the interface's to read; the host passes them on unread.
+ */
+struct IRIS_EXPORT ViewerTakeBatchInfo {
+    const Viewer        viewer      = nullptr;
+    /// @brief Storage for the Batch: VIEWER_BATCH_MAX_BYTES at least
+    uint8_t*            bytes       = nullptr;
+    /// @brief The storage's length in bytes
+    size_t              capacity    = 0;
+};
+/**
  * @brief Where a pointer event over the viewer goes: the slide view, which
  * pans, zooms and turns, or the interface drawn over it.
  */
