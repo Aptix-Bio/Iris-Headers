@@ -115,6 +115,21 @@ IRIS_EXPORT Result viewer_route_pointer             (const ViewerRoutePointerInf
                                                      ViewerPointerResponder& responder) noexcept;
 
 /**
+ * @brief Take the engine's next message for the interface, if one waits.
+ *
+ * The funnel's other direction: the engine queues one Batch of Iris-Core's
+ * bridge schema at a time for its interface, and the host takes each into its
+ * storage and hands the bytes to the interface unread. Call it from the host's
+ * own thread after each display refresh, until it reports none; it never
+ * waits. Storage shorter than VIEWER_BATCH_MAX_BYTES fails before anything is
+ * taken, so no Batch is lost.
+ *
+ * @param info the viewer and the storage to take the Batch into
+ * @param size receives the Batch's length in bytes, or 0 when none waits
+ */
+IRIS_EXPORT Result viewer_take_batch                (const ViewerTakeBatchInfo& info, size_t& size) noexcept;
+
+/**
  * @brief Create and open a slide for viewing. 
  * 
  * This will close any currently opened slide within the viewer and 
