@@ -380,6 +380,20 @@ struct IRIS_EXPORT ViewerRotateScope {
     float               y_location  = 0.5f;
 };
 /**
+ * @brief Information to step the rendered scope view through the focal planes
+ * of a Z-stacked slide.
+ *
+ * Plane 0 is the in-focus plane; planes above it count +1, +2, and planes
+ * below it -1, -2. A positive count steps up the stack, a negative count down,
+ * and the view stops at the stack's top and bottom planes. A slide with one
+ * plane keeps it.
+ *
+ */
+struct IRIS_EXPORT ViewerFocalPlaneScope {
+    /// @brief Planes to step: positive up the stack, negative down
+    int32_t             steps       = 0;
+};
+/**
  * @brief One message for the viewer's engine: the bytes of one Envelope of
  * Iris-Core's bridge schema (bridge/protocol.fbs).
  *
