@@ -30,8 +30,21 @@ jobs:
     timeout-minutes: 5
     environment: downstream-dispatch
     permissions:
+      contents: read
       pull-requests: read
     steps:
+      # ReviewBot_1.5 (development/ERRATA.md, 2026-11-24): the App's client ID and key were never
+      # set, and every merge failed inside the token action with a message naming its input
+      # instead of the setting. This step names each missing setting first; it sees only whether
+      # each is set.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The GitHub App's client ID and private key are set
+        env:
+          DOWNSTREAM_APP_CLIENT_ID: ${{ vars.DOWNSTREAM_APP_CLIENT_ID != '' }}
+          DOWNSTREAM_APP_PRIVATE_KEY: ${{ secrets.DOWNSTREAM_APP_PRIVATE_KEY != '' }}
+        run: cmake -DREQUIRED="DOWNSTREAM_APP_CLIENT_ID;DOWNSTREAM_APP_PRIVATE_KEY" -P cmake/require_settings.cmake
       - name: Only a commit that merged a pull request dispatches
         id: merged
         env:
