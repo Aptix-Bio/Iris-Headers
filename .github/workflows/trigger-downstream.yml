@@ -20,7 +20,12 @@ permissions: {}
 
 jobs:
   dispatch:
-    runs-on: ubuntu-24.04
+    # BlacksmithRunners_1.4: a Blacksmith runner at the label documented in
+    # https://docs.blacksmith.sh/blacksmith-runners/overview (read 2026-11-24).
+    # The job only calls the GitHub API, so 2 vCPU suffice; the GitHub App
+    # token and the environment are GitHub features that work the same on any
+    # runner.
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 5
     environment: downstream-dispatch
     permissions:
