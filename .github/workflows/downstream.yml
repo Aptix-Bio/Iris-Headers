@@ -8,6 +8,8 @@
 #   change red, base green                    -> this change broke it: fail
 #   change red, base red at build or test     -> already broken: warn, pass
 #   any configure failure                     -> the cell's tooling is broken: fail
+# Each consumer is built from its branch named like the pull request's head
+# when it has one (a coordinated change), else from main.
 # Failing on configure keeps a cell that cannot build anything from passing as
 # "already broken". No secret is used here; the consumers' own CI is triggered
 # only when a pull request merges (trigger-downstream.yml).
@@ -130,10 +132,29 @@ jobs:
           path: base
           ref: ${{ github.event.pull_request.base.sha || github.event.before || 'main' }}
           persist-credentials: false
+      # A breaking change is made in each repository on a branch of the same
+      # name, and none can merge first. So the consumer is built from its
+      # branch named like this pull request's head when it has one (the
+      # paired branch), else from main. The branch name reaches the shell
+      # through the environment, since a branch name is attacker-chosen text.
+      - name: The consumer's ref (its paired branch, else main)
+        id: consumer-ref
+        env:
+          CONSUMER: Aptix-Bio/${{ matrix.consumer }}
+          HEAD_REF: ${{ github.head_ref }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          ref=main
+          if [[ -n "$HEAD_REF" ]] && git ls-remote --exit-code --heads "https://github.com/$CONSUMER.git" "refs/heads/$HEAD_REF" > /dev/null; then
+            ref="$HEAD_REF"
+          fi
+          echo "$CONSUMER at $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
       - name: The consumer
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Aptix-Bio/${{ matrix.consumer }}
+          ref: ${{ steps.consumer-ref.outputs.ref }}
           path: consumer
           persist-credentials: false
       # Iris-Slide builds libdicom with Meson.
