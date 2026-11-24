@@ -111,12 +111,12 @@ jobs:
           - { consumer: Iris-File-Extension, os: windows-2025, test: true,
               options: "-DIFE_BUILD_TESTS=ON" }
           # Iris-Slide: decoder only, a build check; the encoder pulls OpenSlide
-          # and the image codecs. IRIS_DEPS_OWNER pins whose Iris-File-Extension
-          # it fetches; otherwise it follows GITHUB_REPOSITORY, this repository's owner.
+          # and libdicom. Its dependencies come from its vcpkg.json; this change
+          # and its IFE reach it as overlay ports (cmake/downstream_verdict.cmake).
           - { consumer: Iris-Slide, os: ubuntu-24.04, test: false,
-              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
+              options: "-DIRIS_BUILD_ENCODER=OFF;-DIRIS_USE_OPENSLIDE=OFF;-DIRIS_BUILD_PYTHON=OFF" }
           - { consumer: Iris-Slide, os: macos-15, test: false,
-              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
+              options: "-DIRIS_BUILD_ENCODER=OFF;-DIRIS_USE_OPENSLIDE=OFF;-DIRIS_BUILD_PYTHON=OFF" }
     defaults:
       run:
         shell: bash
@@ -182,7 +182,15 @@ jobs:
       - name: Install Meson (macOS)
         if: runner.os == 'macOS'
         run: brew install meson
+      # Iris-Slide (VcpkgCaching_2): the verdict below, in a CMake script, through
+      # Iris-Slide's overlay ports of this change and of its IFE.
+      - name: Iris-Slide against the change, then the base
+        if: matrix.consumer == 'Iris-Slide'
+        env:
+          OPTIONS: ${{ matrix.options }}
+        run: cmake -DCONSUMER=consumer -DCHANGE=change -DBASE=base -DIFE="$IFE_SOURCE" -DOPTIONS="$OPTIONS" -P change/cmake/downstream_verdict.cmake
       - name: Build against the change, then the base
+        if: matrix.consumer != 'Iris-Slide'
         env:
           OPTIONS: ${{ matrix.options }}
           RUN_TESTS: ${{ matrix.test }}
