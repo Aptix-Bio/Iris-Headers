@@ -157,6 +157,24 @@ jobs:
           ref: ${{ steps.consumer-ref.outputs.ref }}
           path: consumer
           persist-credentials: false
+      # Iris-Slide fetches Iris-File-Extension itself, at its main, which builds
+      # only against the base when the change renames what IFE includes. Its
+      # IFE is therefore checked out here, at IFE's paired branch when it has
+      # one (else main), and handed to its build in place of the fetch.
+      - name: Iris-Slide's IFE (its paired branch, else main)
+        if: matrix.consumer == 'Iris-Slide'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          ife=https://github.com/Aptix-Bio/Iris-File-Extension.git
+          ref=main
+          if [[ -n "$HEAD_REF" ]] && git ls-remote --exit-code --heads "$ife" "refs/heads/$HEAD_REF" > /dev/null; then
+            ref="$HEAD_REF"
+          fi
+          echo "Aptix-Bio/Iris-File-Extension at $ref"
+          git clone --quiet --depth 1 --branch "$ref" "$ife" ife
+          echo "IFE_SOURCE=$PWD/ife" >> "$GITHUB_ENV"
       # Iris-Slide builds libdicom with Meson.
       - name: Install Ninja and Meson (Linux)
         if: runner.os == 'Linux'
@@ -176,9 +194,11 @@ jobs:
           # Exit codes: 0 green, 1 red at build or test, 2 red at configure.
           build() {
             local headers="$1" out="$2"
+            local ife=()
+            if [[ -n "${IFE_SOURCE:-}" ]]; then ife=(-DFETCHCONTENT_SOURCE_DIR_IRISFILEEXTENSION="$IFE_SOURCE"); fi
             # shellcheck disable=SC2086  # OPTIONS is a list of -D flags from the matrix
             cmake -S consumer -B "$out" "${generator[@]}" -DCMAKE_BUILD_TYPE=Release \
-              -DFETCHCONTENT_SOURCE_DIR_IRISHEADERS="$PWD/$headers" $OPTIONS || return 2
+              -DFETCHCONTENT_SOURCE_DIR_IRISHEADERS="$PWD/$headers" "${ife[@]}" $OPTIONS || return 2
             cmake --build "$out" --config Release --parallel || return 1
             if [[ "$RUN_TESTS" == "true" ]]; then
               ctest --test-dir "$out" -C Release --output-on-failure --no-tests=error || return 1
