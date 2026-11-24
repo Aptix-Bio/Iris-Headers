@@ -6,7 +6,7 @@
 // Buffer_change_strength, which nothing defines, and Buffer_write_into_buffer
 // with a signature src/IrisBuffer.cpp does not define (it defines a
 // (Buffer&, size_t&) overload). Both are fixed in RuntimeLibraries_4.5.
-#include <IrisCodecTypes.hpp>
+#include <IrisSlideTypes.hpp>
 #include <IrisCore.hpp>
 #include <IrisAsync.hpp>
 #include <IrisBuffer.hpp>
@@ -60,7 +60,7 @@ TEST_CASE("Result: success, warning and failure carry their domain and code", "[
     CHECK(warned.code == 7);
 
     const Iris::Result failed =
-        Iris::Result::failure(Iris::Domain::IRIS_CODEC, ProbeError::BAD_ENCODING, "unknown encoding: 7");
+        Iris::Result::failure(Iris::Domain::IRIS_SLIDE, ProbeError::BAD_ENCODING, "unknown encoding: 7");
     CHECK(failed.failed());
     CHECK_FALSE(failed.is_warning());
     CHECK(failed.message == "unknown encoding: 7");
@@ -95,12 +95,12 @@ TEST_CASE("Result: Iris-Headers' own failures name their domain and code", "[Res
 }
 
 TEST_CASE("Result: the codec's failures carry its own domain and code", "[Result]") {
-    static_assert(Iris::ResultCode<IrisCodec::CodecError>);
-    const Iris::Result result = Iris::Result::failure(Iris::Domain::IRIS_CODEC,
-                                                      IrisCodec::CodecError::FILE_NOT_OPENED, "missing.iris");
+    static_assert(Iris::ResultCode<IrisSlide::SlideError>);
+    const Iris::Result result = Iris::Result::failure(Iris::Domain::IRIS_SLIDE,
+                                                      IrisSlide::SlideError::FILE_NOT_OPENED, "missing.iris");
     CHECK(result.failed());
-    CHECK(result.domain == Iris::Domain::IRIS_CODEC);
-    CHECK(result.code_as<IrisCodec::CodecError>() == IrisCodec::CodecError::FILE_NOT_OPENED);
+    CHECK(result.domain == Iris::Domain::IRIS_SLIDE);
+    CHECK(result.code_as<IrisSlide::SlideError>() == IrisSlide::SlideError::FILE_NOT_OPENED);
 }
 
 TEST_CASE("Buffer: a strong copy owns its bytes; a weak wrap shares them", "[Buffer]") {

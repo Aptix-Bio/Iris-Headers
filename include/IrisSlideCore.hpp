@@ -1,16 +1,16 @@
 //
-//  IrisCodecCore.hpp
+//  IrisSlideCore.hpp
 //  Iris
 //
 //  Created by Ryan Landvater on 10/14/23.
 //
 
 
-#ifndef IrisCodecCore_h
-#define IrisCodecCore_h
-#include "IrisCodecTypes.hpp"
+#ifndef IrisSlideCore_h
+#define IrisSlideCore_h
+#include "IrisSlideTypes.hpp"
 
-namespace   IrisCodec {
+namespace   IrisSlide {
 IRIS_EXPORT Version get_codec_version       () noexcept;
 
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -20,20 +20,20 @@ IRIS_EXPORT Version get_codec_version       () noexcept;
 /// Create a default compression context (see Iris Codex Context description).
 IRIS_EXPORT Context create_context          () noexcept;
 
-/// Create a IrisCodec Context that is responsible for decoding an Iris encoded file.
+/// Create a IrisSlide Context that is responsible for decoding an Iris encoded file.
 IRIS_EXPORT Context create_context          (const ContextCreateInfo&) noexcept;
 
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 //      Slide File Access                                                   //
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-/// Check basic file header signatures to see if it is an Iris Codec File
-IRIS_EXPORT Result is_iris_codec_file       (const std::string& file_path) noexcept;
+/// Check basic file header signatures to see if it is an Iris Slide File
+IRIS_EXPORT Result is_iris_slide_file       (const std::string& file_path) noexcept;
 
-/// Validate a slide file encoded using the Iris Codec
+/// Validate a slide file encoded by Iris Slide
 IRIS_EXPORT Result validate_slide           (const SlideOpenInfo&) noexcept;
 
-/// Open an IrisCodec encoded slide file
+/// Open an IrisSlide encoded slide file
 IRIS_EXPORT Slide open_slide                (const SlideOpenInfo&) noexcept;
 
 /// Pull the slide extent from a valid Iris Slide File
@@ -103,4 +103,4 @@ IRIS_EXPORT Result set_encoder_src_cache    (const Encoder&, const Cache&) noexc
 IRIS_EXPORT Result set_encoder_dst_path     (const Encoder&, const std::string&) noexcept;
 
 }
-#endif /* IrisCodecCore_h */
+#endif /* IrisSlideCore_h */

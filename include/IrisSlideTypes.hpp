@@ -1,30 +1,30 @@
 /**
- * @file IrisCodecTypes.hpp
+ * @file IrisSlideTypes.hpp
  * @author Ryan Landvater (RyanLandvater@gmail.com)
- * @brief  Iris Codec C++ Types Predeclarations
+ * @brief  Iris Slide C++ Types Predeclarations
  * @version 2025.1.0
  * @date 2024-01-9
  * @copyright Copyright (c) 2022-25 Ryan Landvater
  *
- * The Iris Codec Compression Module
+ * Iris Slide: the slide file decoder and encoder
  * Part of the Iris Whole Slide Imaging Project
  *
  * Codec elements are defined here for use  in the implementation of the
- * Iris Codec for GPU optimized decompression routines and to allow for
+ * Iris Slide for GPU optimized decompression routines and to allow for
  * integration of decompression pipelines with the Iris Core viewer engine.
  *
  * The codec can be optionally used outside of / without the core engine
  * for non-Iris implementations that still wish access to the compression
  * and (or) .iris file extension structure
  *
- * Use of Iris Codec and the Iris File Extension (.iris) specification follows the
+ * Use of Iris Slide and the Iris File Extension (.iris) specification follows the
  * CC BY-ND 4.0 License outlined in the Iris Digital Slide Extension File Structure Techinical Specification
  * https://creativecommons.org/licenses/by-nd/4.0/
  *
  */
 
-#ifndef IrisCodecTypes_h
-#define IrisCodecTypes_h
+#ifndef IrisSlideTypes_h
+#define IrisSlideTypes_h
 // Codec types rely upon the Iris Core types
 // and the Core types header must be included.
 #include "IrisTypes.hpp"
@@ -34,15 +34,15 @@ using       Device          = std::shared_ptr<struct Device_t>;
 using       Queue           = std::shared_ptr<struct Queue_t>;
 } // END IRIS CORE PREDECLARATIONS
 
-namespace IrisCodec {
+namespace IrisSlide {
 /**
  * @brief Why a codec call failed: the code of every failure Result the codec
- * returns, under `Iris::Domain::IRIS_CODEC`, read back with
- * `result.code_as<IrisCodec::CodecError>()`. The message carries the offending
+ * returns, under `Iris::Domain::IRIS_SLIDE`, read back with
+ * `result.code_as<IrisSlide::SlideError>()`. The message carries the offending
  * value. A failure IFE reports while the codec reads a file keeps IFE's own
  * domain and code (`Iris::File::FileError`).
  */
-enum class CodecError : std::uint32_t {
+enum class SlideError : std::uint32_t {
     FILE_NOT_OPENED,                ///< the file could not be mapped or opened
     SLIDE_INFO_UNREADABLE,          ///< the slide's extent and metadata could not be read
     ASSOCIATED_IMAGE_UNREADABLE,    ///< an associated image's description could not be read
@@ -64,13 +64,13 @@ enum class CodecError : std::uint32_t {
  * 
  * The context provides a centrally accessible wrapper around image compression codecs that
  * exist on the CPU or that may exist on the GPU in the form of hardware decoders 
- * or the Iris Codec compression system. The context may be created using Iris GPU Vulkan
+ * or the Iris Slide compression system. The context may be created using Iris GPU Vulkan
  * instance and device wrappers for direct pipeline integration with a rendering system.
  */
 using       Context         = std::shared_ptr<class Context_t>;
 
 /**
- * @brief Iris Codec Encoded slide convenience wrapper. This CANNOT wrap other
+ * @brief Iris-encoded slide convenience wrapper. This CANNOT wrap other
  * file types (such as OpenSlide files).
  * 
  */
@@ -175,7 +175,7 @@ struct IRIS_EXPORT Metadata {
     /// List of annotation grouping names describing the group of annotations (*eg. handwriting; nuclei*)
     using AnnotationGroups                  = std::set<std::string>;
     
-    /// Iris Codec Version used to encode the file, if Iris Codec encoded it. Otherwise leave this blank
+    /// Iris Slide Version used to encode the file, if Iris Slide encoded it. Otherwise leave this blank
     Version         codec                   = {0,0,0};
     /// Metadata Attributes containing key-value pairs
     Attributes      attributes;
@@ -331,5 +331,5 @@ struct IRIS_EXPORT EncoderProgress {
     std::string     dstFilePath;
     std::string     errorMsg;
 };
-} // END IRIS CODEC NAMESPACE
-#endif /* IrisCodecTypes_h */
+} // END IRIS SLIDE NAMESPACE
+#endif /* IrisSlideTypes_h */

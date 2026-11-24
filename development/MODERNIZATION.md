@@ -8,6 +8,14 @@ allowed. We are migrating this project to as modern a design architecture as we
 can." And on its purpose: "I wanted to ensure both open source and proprietary
 projects share a common language."
 
+**Renamed 2026-11-24 (Ryan: "re-name Iris-Codec to Iris-Slide and make that
+the open source decoder / encoder of slide files"; full rename across the
+repositories):** Iris-Codec is now Iris-Slide, at `Aptix-Bio/Iris-Slide`. Its
+headers are `IrisSlideCore.hpp` and `IrisSlideTypes.hpp`, its namespace
+`IrisSlide`, its error codes `IrisSlide::SlideError` under
+`Iris::Domain::IRIS_SLIDE`. The entries below dated before the rename keep the
+names they were written with.
+
 ## 1. Purpose
 
 Iris-Headers is the shared vocabulary of the Iris family: the types that the
