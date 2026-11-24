@@ -15,20 +15,13 @@
 # only when a pull request merges (trigger-downstream.yml).
 #
 # BlacksmithRunners_1.4: every job runs on a Blacksmith runner (Ryan,
-# 2026-11-24: "We should be using blacksmith for our CI runners"), at the
+# 2026-11-24: "We should be using blacksmith for our CI runners") at the
 # labels documented in https://docs.blacksmith.sh/blacksmith-runners/overview
-# (read 2026-11-24): Linux on blacksmith-2vcpu-ubuntu-2404 (2 vCPU, 8 GB);
-# Windows on blacksmith-2vcpu-windows-2025 (2 vCPU, 7 GB; public beta; Visual
-# Studio Build Tools 2022 in place of the full IDE); macOS on
-# blacksmith-6vcpu-macos-15 (Apple M4; it follows GitHub's macos-15 image, so
-# the same Xcode); the same OS versions the GitHub-hosted cells ran. A macOS minute
-# bills as twenty 2-vCPU Linux minutes (same page, FAQ), so each macOS job
-# waits (needs:) on its Linux and Windows cells, and runs only when they pass.
-# The step lists are YAML anchors shared by the two jobs of each check
-# (https://github.blog/changelog/2025-09-18-actions-yaml-anchors-and-non-public-workflow-templates/,
-# read 2026-11-24), so a check's steps exist once.
-# cmake/check_runner_labels.cmake, run by the runner-labels job, fails on any
-# other label.
+# (read 2026-11-24), each the OS version the GitHub-hosted cell ran: Linux on
+# blacksmith-2vcpu-ubuntu-2404 (8 GB), Windows on blacksmith-2vcpu-windows-2025
+# (7 GB; public beta, Visual Studio Build Tools 2022 with the ClangCL
+# toolset), macOS on blacksmith-6vcpu-macos-15 (Apple M4, GitHub's macos-15
+# image). cmake/check_runner_labels.cmake fails on any other label.
 name: downstream
 
 on:
@@ -68,12 +61,13 @@ jobs:
       matrix:
         include:
           - { os: blacksmith-2vcpu-ubuntu-2404, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          - { os: blacksmith-6vcpu-macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
           # The default Visual Studio generator with its ClangCL toolset (Iris-Core D38).
           - { os: blacksmith-2vcpu-windows-2025, configure: "-T ClangCL" }
-    defaults: &bash
+    defaults:
       run:
         shell: bash
-    steps: &standalone-steps
+    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -88,21 +82,6 @@ jobs:
           cmake -S . -B build $CONFIGURE -DIRIS_HEADERS_CHECK_STANDALONE=ON
           cmake --build build --config Release
 
-  standalone-headers-macos:
-    name: Headers compile alone (${{ matrix.os }})
-    needs: standalone-headers
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: blacksmith-6vcpu-macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
-    defaults: *bash
-    steps: *standalone-steps
-
   type-tests:
     name: Type tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -114,10 +93,13 @@ jobs:
       matrix:
         include:
           - { os: blacksmith-2vcpu-ubuntu-2404, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
+          - { os: blacksmith-6vcpu-macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
           # The first build of MemoryArena's Windows path (WindowsPaths_4.7).
           - { os: blacksmith-2vcpu-windows-2025, configure: "-T ClangCL" }
-    defaults: *bash
-    steps: &type-test-steps
+    defaults:
+      run:
+        shell: bash
+    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -133,21 +115,6 @@ jobs:
           cmake --build build --config Release
           ctest --test-dir build -C Release --output-on-failure --no-tests=error
 
-  type-tests-macos:
-    name: Type tests (${{ matrix.os }})
-    needs: type-tests
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: blacksmith-6vcpu-macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
-    defaults: *bash
-    steps: *type-test-steps
-
   consumer:
     name: ${{ matrix.consumer }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -161,6 +128,8 @@ jobs:
           # IFE: self-contained and fast; Windows is where macro collisions bite.
           - { consumer: Iris-File-Extension, os: blacksmith-2vcpu-ubuntu-2404, test: true,
               options: "-DIFE_BUILD_TESTS=ON" }
+          - { consumer: Iris-File-Extension, os: blacksmith-6vcpu-macos-15, test: true,
+              options: "-DIFE_BUILD_TESTS=ON" }
           - { consumer: Iris-File-Extension, os: blacksmith-2vcpu-windows-2025, test: true,
               options: "-DIFE_BUILD_TESTS=ON" }
           # Iris-Slide: decoder only, a build check; the encoder pulls OpenSlide
@@ -168,8 +137,12 @@ jobs:
           # it fetches; otherwise it follows GITHUB_REPOSITORY, this repository's owner.
           - { consumer: Iris-Slide, os: blacksmith-2vcpu-ubuntu-2404, test: false,
               options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
-    defaults: *bash
-    steps: &consumer-steps
+          - { consumer: Iris-Slide, os: blacksmith-6vcpu-macos-15, test: false,
+              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
+    defaults:
+      run:
+        shell: bash
+    steps:
       - name: This change
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -270,21 +243,3 @@ jobs:
             exit 1
           fi
           echo "::warning::The consumer fails against the base too: already broken, not blocked by this change."
-
-  consumer-macos:
-    name: ${{ matrix.consumer }} (${{ matrix.os }})
-    needs: consumer
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { consumer: Iris-File-Extension, os: blacksmith-6vcpu-macos-15, test: true,
-              options: "-DIFE_BUILD_TESTS=ON" }
-          - { consumer: Iris-Slide, os: blacksmith-6vcpu-macos-15, test: false,
-              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
-    defaults: *bash
-    steps: *consumer-steps
