@@ -481,3 +481,14 @@ TEST_CASE("MemoryArena: an anonymous arena reserves its capacity and commits wri
     CHECK(arena.base()[0] == 0x5A);
     CHECK(arena.base()[4095] == 0xA5);
 }
+
+TEST_CASE("MetadataType matches IFE's metadata_formats value for value, so free text never claims I2S", "[Metadata]") {
+    // IFE spec/ife_constants.json, metadata_formats "1.0": I2S 1, DICOM 2,
+    // FREE_TEXT 3. METADATA_I2S promises the pairs identify no individual; an
+    // encoder's unfiltered vendor properties are FREE_TEXT and must not carry 1.
+    STATIC_CHECK(IrisSlide::METADATA_UNDEFINED == 0);
+    STATIC_CHECK(IrisSlide::METADATA_I2S == 1);
+    STATIC_CHECK(IrisSlide::METADATA_DICOM == 2);
+    CHECK(static_cast<int>(IrisSlide::METADATA_FREE_TEXT) == 3);
+    CHECK(IrisSlide::METADATA_FREE_TEXT != IrisSlide::METADATA_I2S);
+}

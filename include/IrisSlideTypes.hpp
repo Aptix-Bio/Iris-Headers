@@ -130,11 +130,14 @@ enum IRIS_EXPORT Encoding : uint8_t {
     TILE_ENCODING_AVIF                      = 3,
     TILE_ENCODING_DEFAULT                   = TILE_ENCODING_JPEG //v2025.1 - will change
 };
+// Values equal IFE's metadata_formats (spec/ife_constants.json). METADATA_I2S
+// promises the pairs identify no individual, so free text has its own value
+// and never claims I2S (IFE 1.1 erratum: 1.0 aliased the two).
 enum IRIS_EXPORT MetadataType : uint8_t {
     METADATA_UNDEFINED                      = 0,
     METADATA_I2S                            = 1,
     METADATA_DICOM                          = 2,
-    METADATA_FREE_TEXT                      = METADATA_I2S,
+    METADATA_FREE_TEXT                      = 3,
 };
 struct IRIS_EXPORT Attributes :
 public std::unordered_map<std::string, std::u8string> {
