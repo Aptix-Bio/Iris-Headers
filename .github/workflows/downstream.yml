@@ -8,6 +8,8 @@
 #   change red, base green                    -> this change broke it: fail
 #   change red, base red at build or test     -> already broken: warn, pass
 #   any configure failure                     -> the cell's tooling is broken: fail
+# Each consumer is built from its branch named like the pull request's head
+# when it has one (a coordinated change), else from main.
 # Failing on configure keeps a cell that cannot build anything from passing as
 # "already broken". No secret is used here; the consumers' own CI is triggered
 # only when a pull request merges (trigger-downstream.yml).
@@ -108,13 +110,13 @@ jobs:
               options: "-DIFE_BUILD_TESTS=ON" }
           - { consumer: Iris-File-Extension, os: windows-2025, test: true,
               options: "-DIFE_BUILD_TESTS=ON" }
-          # Iris-Codec: decoder only, a build check; the encoder pulls OpenSlide
+          # Iris-Slide: decoder only, a build check; the encoder pulls OpenSlide
           # and the image codecs. IRIS_DEPS_OWNER pins whose Iris-File-Extension
           # it fetches; otherwise it follows GITHUB_REPOSITORY, this repository's owner.
-          - { consumer: Iris-Codec, os: ubuntu-24.04, test: false,
-              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=IrisDigitalPathology" }
-          - { consumer: Iris-Codec, os: macos-15, test: false,
-              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=IrisDigitalPathology" }
+          - { consumer: Iris-Slide, os: ubuntu-24.04, test: false,
+              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
+          - { consumer: Iris-Slide, os: macos-15, test: false,
+              options: "-DIRIS_BUILD_ENCODER=OFF -DIRIS_USE_OPENSLIDE=OFF -DIRIS_BUILD_PYTHON=OFF -DIRIS_DEPS_OWNER=Aptix-Bio" }
     defaults:
       run:
         shell: bash
@@ -130,13 +132,50 @@ jobs:
           path: base
           ref: ${{ github.event.pull_request.base.sha || github.event.before || 'main' }}
           persist-credentials: false
+      # A breaking change is made in each repository on a branch of the same
+      # name, and none can merge first. So the consumer is built from its
+      # branch named like this pull request's head when it has one (the
+      # paired branch), else from main. The branch name reaches the shell
+      # through the environment, since a branch name is attacker-chosen text.
+      - name: The consumer's ref (its paired branch, else main)
+        id: consumer-ref
+        env:
+          CONSUMER: Aptix-Bio/${{ matrix.consumer }}
+          HEAD_REF: ${{ github.head_ref }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          ref=main
+          if [[ -n "$HEAD_REF" ]] && git ls-remote --exit-code --heads "https://github.com/$CONSUMER.git" "refs/heads/$HEAD_REF" > /dev/null; then
+            ref="$HEAD_REF"
+          fi
+          echo "$CONSUMER at $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
       - name: The consumer
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: IrisDigitalPathology/${{ matrix.consumer }}
+          repository: Aptix-Bio/${{ matrix.consumer }}
+          ref: ${{ steps.consumer-ref.outputs.ref }}
           path: consumer
           persist-credentials: false
-      # Iris-Codec builds libdicom with Meson.
+      # Iris-Slide fetches Iris-File-Extension itself, at its main, which builds
+      # only against the base when the change renames what IFE includes. Its
+      # IFE is therefore checked out here, at IFE's paired branch when it has
+      # one (else main), and handed to its build in place of the fetch.
+      - name: Iris-Slide's IFE (its paired branch, else main)
+        if: matrix.consumer == 'Iris-Slide'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          ife=https://github.com/Aptix-Bio/Iris-File-Extension.git
+          ref=main
+          if [[ -n "$HEAD_REF" ]] && git ls-remote --exit-code --heads "$ife" "refs/heads/$HEAD_REF" > /dev/null; then
+            ref="$HEAD_REF"
+          fi
+          echo "Aptix-Bio/Iris-File-Extension at $ref"
+          git clone --quiet --depth 1 --branch "$ref" "$ife" ife
+          echo "IFE_SOURCE=$PWD/ife" >> "$GITHUB_ENV"
+      # Iris-Slide builds libdicom with Meson.
       - name: Install Ninja and Meson (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build meson
@@ -155,9 +194,11 @@ jobs:
           # Exit codes: 0 green, 1 red at build or test, 2 red at configure.
           build() {
             local headers="$1" out="$2"
+            local ife=()
+            if [[ -n "${IFE_SOURCE:-}" ]]; then ife=(-DFETCHCONTENT_SOURCE_DIR_IRISFILEEXTENSION="$IFE_SOURCE"); fi
             # shellcheck disable=SC2086  # OPTIONS is a list of -D flags from the matrix
             cmake -S consumer -B "$out" "${generator[@]}" -DCMAKE_BUILD_TYPE=Release \
-              -DFETCHCONTENT_SOURCE_DIR_IRISHEADERS="$PWD/$headers" $OPTIONS || return 2
+              -DFETCHCONTENT_SOURCE_DIR_IRISHEADERS="$PWD/$headers" "${ife[@]}" $OPTIONS || return 2
             cmake --build "$out" --config Release --parallel || return 1
             if [[ "$RUN_TESTS" == "true" ]]; then
               ctest --test-dir "$out" -C Release --output-on-failure --no-tests=error || return 1

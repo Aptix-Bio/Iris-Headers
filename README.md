@@ -4,7 +4,7 @@ This repository contains the Iris Digital Pathology public header files for all 
 
 Iris Digital Pathology API Modules:
   - IrisCore
-  - IrisCodec
+  - IrisSlide
   - ~~IrisNetworking~~ (*not yet available -- internal use only*)
   - ~~IrisUserInterface~~ (*not yet available -- internal use only*)
 

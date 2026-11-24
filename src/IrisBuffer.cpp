@@ -1,6 +1,6 @@
 //
-//  IrisCodec_Buffer.cpp
-//  IrisCodec
+//  IrisSlide_Buffer.cpp
+//  IrisSlide
 //
 //  Created by Ryan Landvater on 8/2/22.
 //
@@ -42,7 +42,7 @@ void*  Buffer_write_into_buffer (Buffer &__BUF, size_t& bytes)
                 throw std::runtime_error
                 (std::string("Attempting to write " + 
                     std::to_string(bytes) + 
-                    " bytes into a WEAK IrisCodec buffer with capacity "+
+                    " bytes into a WEAK IrisSlide buffer with capacity "+
                     std::to_string(bytes) + 
                     " bytes.Either convert the buffer into a strong reference to allow expansion or wrap a larger allocation with sufficient space."
                 ));
@@ -61,7 +61,7 @@ Result Buffer_get_data (const Buffer &__BUF, void*& data, size_t& bytes)
 }
 // MARK: - IRIS INTERNALS
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-//  IRIS CODEC EXPOSED API                                  //
+//  IRIS SLIDE EXPOSED API                                  //
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 Buffer_t::Buffer_t (BufferReferenceStrength _ref) noexcept :
 _strength   (_ref)

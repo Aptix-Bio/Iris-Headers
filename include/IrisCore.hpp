@@ -262,7 +262,7 @@ IRIS_EXPORT Buffer  Create_strong_buffer (size_t buffer_size_in_bytes);
 IRIS_EXPORT Buffer Copy_strong_buffer_from_data (const void* data_ptr, size_t bytes);
 
 /**
- * @brief Wrap a **weak buffer** around foreign data. This wrapper is used for implementing Iris Codec functions on
+ * @brief Wrap a **weak buffer** around foreign data. This wrapper is used for implementing Iris Slide functions on
  * foreign data blocks without having to copy the data. 
  * 
  * This is  a convenience function for such tasks as decoding network derived large buffers sequences to reduce data 
@@ -283,7 +283,7 @@ IRIS_EXPORT Buffer Wrap_weak_buffer_fom_data (const void* const data_ref, size_t
 /**
  * @brief Write data into a buffer in a safe manner. 
  * 
- * This is useful if you don't want to include the IrisCodec_buffer.h header and expose yourself
+ * This is useful if you don't want to include the IrisSlide_buffer.h header and expose yourself
  * to accidentally using it wrong and corrupting your data. This function works like a c-style 
  * array exposed to a method for writing. Provide the buffer and size. This method functions 
  * differently based upon the strength of the reference (see discussion below)
@@ -307,7 +307,7 @@ IRIS_EXPORT void* Buffer_write_into_buffer (const Buffer& buffer, size_t bytes);
 /**
  * @brief Copy-extract the data from the underlying buffer structure. 
  * 
- * This is useful if you don't want to include the IrisCodecBuffer.h header and 
+ * This is useful if you don't want to include the IrisSlideBuffer.h header and 
  * expose yourself to accidentally using it incorrectly and corrupting your memory.
  * 
  * @param buffer Iris::Buffer handle

@@ -130,7 +130,7 @@ enum class Severity : std::uint8_t {
 enum class Domain : std::uint8_t {
     IRIS_HEADERS,
     IRIS_FILE_EXTENSION,
-    IRIS_CODEC,
+    IRIS_SLIDE,
     IRIS_CORE,
 };
 /// Iris-Headers' own failures (Domain::IRIS_HEADERS).
@@ -578,7 +578,7 @@ struct IRIS_EXPORT LocalSlideOpenInfo {
      */
     enum : uint8_t {
         SLIDE_TYPE_UNKNOWN,         //*< Unknown file encoding
-        SLIDE_TYPE_IRIS,            //*< Iris Codec File
+        SLIDE_TYPE_IRIS,            //*< Iris Slide File
         SLIDE_TYPE_OPENSLIDE,       //*< Vendor specific file (ex SVS)
     }                   type        = SLIDE_TYPE_UNKNOWN;
     

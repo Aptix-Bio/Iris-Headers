@@ -43,8 +43,8 @@ jobs:
         with:
           client-id: ${{ vars.DOWNSTREAM_APP_CLIENT_ID }}
           private-key: ${{ secrets.DOWNSTREAM_APP_PRIVATE_KEY }}
-          owner: IrisDigitalPathology
-          repositories: Iris-File-Extension,Iris-Codec
+          owner: Aptix-Bio
+          repositories: Iris-File-Extension,Iris-Slide
           permission-actions: write
       - name: Start each consumer's CI against the merge commit
         if: steps.merged.outputs.dispatch == 'true'
@@ -55,12 +55,12 @@ jobs:
           # One line per consumer workflow; each accepts workflow_dispatch with
           # an iris_headers_ref input (added in that repository).
           while read -r repository workflow; do
-            gh api --method POST "repos/IrisDigitalPathology/$repository/actions/workflows/$workflow/dispatches" \
+            gh api --method POST "repos/Aptix-Bio/$repository/actions/workflows/$workflow/dispatches" \
               -f ref=main -f "inputs[iris_headers_ref]=$MERGED"
             echo "dispatched $repository/$workflow at $MERGED"
           done <<'CONSUMERS'
           Iris-File-Extension ci.yml
-          Iris-Codec cmake-linux-CI.yml
-          Iris-Codec cmake-macos-CI.yml
-          Iris-Codec cmake-win64-CI.yml
+          Iris-Slide cmake-linux-CI.yml
+          Iris-Slide cmake-macos-CI.yml
+          Iris-Slide cmake-win64-CI.yml
           CONSUMERS
