@@ -197,10 +197,11 @@ jobs:
           echo "Aptix-Bio/Iris-File-Extension at $ref"
           git clone --quiet --depth 1 --branch "$ref" "$ife" ife
           echo "IFE_SOURCE=$PWD/ife" >> "$GITHUB_ENV"
-      # Iris-Slide builds libdicom with Meson.
+      # Meson for the IFE cell; NASM and pkg-config for the ports Iris-Slide's vcpkg.json builds
+      # (aom needs NASM on x64 Linux, which vcpkg does not fetch: "Could not find nasm").
       - name: Install Ninja and Meson (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build meson
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ninja-build meson nasm pkg-config
       - name: Install Meson (macOS)
         if: runner.os == 'macOS'
         run: brew install meson
