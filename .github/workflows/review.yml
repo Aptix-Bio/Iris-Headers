@@ -1,0 +1,192 @@
+# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1): the Aptix governance review bot on
+# every non-draft pull request, judging it against this repository's rubric
+# (.github/review/rubric.toml) and the rules it names. Two jobs, so the job holding the model key
+# cannot write to the pull request and the job that writes never sees the key:
+#   1. Aptix Review Agent: the model key, read-only; asks Claude for a verdict on each rubric item,
+#      saves it as an artifact, and carries the pull request's review conversation in the Actions
+#      cache so each review adds to the one before it.
+#   2. Update PR from Agent: no key, pull-requests: write; ticks the "Agent review" boxes, posts
+#      one comment, checks that every new MODERNIZATION.md tick links its commit, and fails if a
+#      blocking item failed or step 1 did.
+# Both print the review to their log, each line starting `review_bot:`.
+#
+# Where the bot comes from. The bot lives in Aptix-Bio/governance, a private repository, and
+# GitHub lets only private repositories use a private repository's actions ("Access is allowed
+# only from private repositories": docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository,
+# read 2026-11-24), so this public repository cannot name it in `uses:`. Each job checks it out at
+# GOVERNANCE_COMMIT with GOVERNANCE_READ_TOKEN, a fine-grained token with Contents: read on
+# Aptix-Bio/governance alone, and runs its composite action from that path. The token is given to
+# that checkout step and nothing else, and governance stays private. The action reports the
+# commit it ran from as `github.action_ref`, which GitHub sets for an action named in `uses:` with
+# a ref; a local path has none, so BOT_REF is the pin itself.
+#
+# Why `pull_request_target` is safe here (GitHub, "Securely using pull_request_target",
+# docs.github.com/en/actions/reference/security/securely-using-pull_request_target, read
+# 2026-11-24: the run gets the base repository's token and its secrets, and the risk is executing
+# the pull request's code): no step checks out, builds or runs the pull request's head. Each job
+# checks out the default branch's commit (`github.sha` under this trigger) for the rubric, the
+# files it names and CODEOWNERS, runs the bot from its pinned commit, and reads the diff through
+# the API as data; the head's commit reaches the bot only as HEAD_SHA, naming the diff it fetches.
+# Pull request text reaches a `run:` script only through `env:` (GitHub, "Secure use reference",
+# docs.github.com/en/actions/reference/security/secure-use, read 2026-11-24).
+# cmake/check_review_configuration.cmake holds all of this, in the runner-labels job.
+#
+# Forks get no model review. `pull_request_target` gives a fork's pull request the same secrets
+# and write token as a branch's, and anyone can open one against a public repository, so both
+# review jobs run only for a pull request whose head is a branch of this repository; for a fork's,
+# `fork-skipped` states why on the run. A maintainer who wants a fork's change reviewed pushes it
+# to a branch here and opens a pull request from that branch.
+#
+# The conversation is saved into the default branch's cache scope; GitHub gives
+# `pull_request_target` read-only access to that scope by default, against cache poisoning, so the
+# review job declares `cache-mode: write` (GitHub changelog, 2026-09-10, "Control GitHub Actions
+# cache access with cache-mode", read 2026-11-24): it runs no code from the pull request, and the
+# bot believes a restored conversation only when its SHA-256 is the one its sealed state names.
+name: review bot
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Aptix-Bio/governance at the merge of its PR 12 (untagged), the bot that keeps each pull
+  # request's reviews as one conversation in the Actions cache.
+  GOVERNANCE_COMMIT: eea566a60b93920050c30bfce901e250668186a1
+
+jobs:
+  review:
+    name: 1. Aptix Review Agent
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    # Room for a reply of the bot's 64,000 output tokens; a complete review takes minutes.
+    timeout-minutes: 30
+    cache-mode: write
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: base
+          persist-credentials: false
+      - name: The model key and the governance token are set
+        env:
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_KEY != '' }}
+          GOVERNANCE_READ_TOKEN: ${{ secrets.GOVERNANCE_READ_TOKEN != '' }}
+        run: cmake -DREQUIRED="ANTHROPIC_KEY;GOVERNANCE_READ_TOKEN" -P base/cmake/require_settings.cmake
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Aptix-Bio/governance
+          ref: ${{ env.GOVERNANCE_COMMIT }}
+          token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
+          path: governance
+          persist-credentials: false
+      - id: bot
+        uses: ./governance/review-bot
+      # The previous review's conversation, which this review adds to: the key is its SHA-256,
+      # named by the state the bot sealed in its comment, and `review` checks the restored file.
+      - id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
+          PYTHON: ${{ steps.bot.outputs.python }}
+          SCRIPT: ${{ steps.bot.outputs.script }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: '"$PYTHON" "$SCRIPT" transcript-key --pr "$PR_NUMBER"'
+      - if: steps.previous.outputs.restore-key != ''
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: transcript.json
+          key: ${{ steps.previous.outputs.restore-key }}
+      - id: review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
+          PYTHON: ${{ steps.bot.outputs.python }}
+          SCRIPT: ${{ steps.bot.outputs.script }}
+          BOT_REF: ${{ env.GOVERNANCE_COMMIT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RULES_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          "$PYTHON" "$SCRIPT" review --pr "$PR_NUMBER" --base-dir base --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA" \
+            --rubric-commit "$RULES_SHA" --bot-ref "$BOT_REF" --run-url "$RUN_URL" --out verdict.json --transcript transcript.json
+          test -s verdict.json
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: transcript.json
+          key: ${{ steps.review.outputs.save-key }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: review-verdict
+          path: verdict.json
+          retention-days: 90
+          if-no-files-found: error
+      # The conversation as this review left it, to read; the next review reads the cache.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: review-transcript
+          path: transcript.json
+          retention-days: 14
+          if-no-files-found: error
+
+  code-review:
+    name: 2. Update PR from Agent
+    needs: review
+    # always(): a failed review fails this job too; a draft or a fork skips both.
+    if: always() && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: base
+          fetch-depth: 0  # the commit trace resolves cited hashes in the default branch's history
+          persist-credentials: false
+      - name: The governance token is set
+        env:
+          GOVERNANCE_READ_TOKEN: ${{ secrets.GOVERNANCE_READ_TOKEN != '' }}
+        run: cmake -DREQUIRED="GOVERNANCE_READ_TOKEN" -P base/cmake/require_settings.cmake
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Aptix-Bio/governance
+          ref: ${{ env.GOVERNANCE_COMMIT }}
+          token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
+          path: governance
+          persist-credentials: false
+      - id: bot
+        uses: ./governance/review-bot
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: needs.review.result == 'success'
+        with:
+          name: review-verdict
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHON: ${{ steps.bot.outputs.python }}
+          SCRIPT: ${{ steps.bot.outputs.script }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: '"$PYTHON" "$SCRIPT" publish --pr "$PR_NUMBER" --head-sha "$HEAD_SHA" --rubric base/.github/review/rubric.toml --base-dir base --verdict verdict.json --run-url "$RUN_URL"'
+
+  fork-skipped:
+    name: Fork pull requests get no model review
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - run: echo "::notice title=No model review for a fork::The review bot holds the model key and a write token, which pull_request_target would give to a fork's pull request; a maintainer reviews this change, or pushes it to a branch here to have the bot review it (.github/workflows/review.yml)."

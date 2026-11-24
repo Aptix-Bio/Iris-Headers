@@ -30,3 +30,31 @@ target_link_libraries (
     IrisBuffer  # (optional) Buffers
 )
 ```
+
+## Pull request review
+
+Every pull request from a branch of this repository is reviewed by the Aptix governance review
+bot against this repository's rules: `.github/review/rubric.toml` names the items and the files
+they are judged against (`development/style_guide.md`, `development/ci_runners.md`,
+`development/MODERNIZATION.md`, `development/ERRATA.md`), read from the default branch so a pull
+request cannot change the rules it is judged by. The bot ticks the "Agent review" boxes of the
+pull request template and posts one comment; a failed blocking item fails the `code-review`
+check. A maintainer gives the final verification.
+
+```mermaid
+flowchart LR
+    PR["pull request"] --> F{"head is a branch<br/>of this repository?"}
+    F -->|yes| R["1. Aptix Review Agent<br/>model key, read-only:<br/>a verdict per rubric item"]
+    R --> C["2. Update PR from Agent<br/>pull-requests: write, no key:<br/>boxes, comment, commit trace"]
+    F -->|"no: a fork"| S["fork-skipped:<br/>a notice stating why"]
+    C --> M["maintainer's verification"]
+    S --> M
+```
+
+**Pull requests from forks get no model review.** The review runs on `pull_request_target`,
+which gives a fork's pull request the repository's secrets and a write token, and anyone can open
+one against a public repository; so both review jobs run only when the head is a branch of this
+repository, and a fork's run shows a `fork-skipped` job whose notice states the reason. A
+maintainer reviews a fork's change by hand, or pushes it to a branch here and opens a pull request
+from that branch. `.github/workflows/review.yml` explains the design, and
+`cmake/check_review_configuration.cmake` holds its safety properties in CI.

@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   runner-labels:
-    name: Workflow rules (runner labels, downstream verdict)
+    name: Workflow rules (runner labels, downstream verdict, review configuration)
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 5
     permissions:
@@ -50,6 +50,8 @@ jobs:
         run: cmake -P cmake/check_runner_labels.cmake
       - name: The downstream verdict fails a change green only on a paired branch (ReviewBot_1.5)
         run: cmake -P cmake/tests/downstream_verdict_test.cmake
+      - name: The review bot's workflow keeps its safety properties (ReviewBot_1.5)
+        run: cmake -P cmake/check_review_configuration.cmake
 
   standalone-headers:
     name: Headers compile alone (${{ matrix.os }})
