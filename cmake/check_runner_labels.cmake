@@ -1,6 +1,6 @@
 # BlacksmithRunners_1.4 (development/MODERNIZATION.md): every job in
-# .github/workflows runs on a pinned Blacksmith runner. Ryan, 2026-11-24: "We
-# should be using blacksmith for our CI runners". A GitHub-hosted label
+# .github/workflows runs on a pinned Blacksmith runner (decided 2026-11-24).
+# A GitHub-hosted label
 # (ubuntu-24.04, macos-15, windows-2025) would bill GitHub minutes, which
 # stopped starting jobs in Aptix-Bio's private repositories that day; a
 # -latest label lets the image move under a passing build (Arbiter

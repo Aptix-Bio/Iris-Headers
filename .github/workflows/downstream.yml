@@ -14,8 +14,8 @@
 # "already broken". No secret is used here; the consumers' own CI is triggered
 # only when a pull request merges (trigger-downstream.yml).
 #
-# BlacksmithRunners_1.4: every job runs on a Blacksmith runner (Ryan,
-# 2026-11-24: "We should be using blacksmith for our CI runners") at the
+# BlacksmithRunners_1.4: every job runs on a Blacksmith runner (decided
+# 2026-11-24, when GitHub-hosted jobs stopped starting over billing) at the
 # labels documented in https://docs.blacksmith.sh/blacksmith-runners/overview
 # (read 2026-11-24), each the OS version the GitHub-hosted cell ran: Linux on
 # blacksmith-2vcpu-ubuntu-2404 (8 GB), Windows on blacksmith-2vcpu-windows-2025
