@@ -33,7 +33,7 @@
 #include <thread>
 #include <vector>
 
-// ResultRedesigned_4.1 (ResultShapeQuestion_3, Ryan 2026-11-12): a scoped
+// ResultRedesigned_4.1 (ResultShapeQuestion_3, decided 2026-11-12): a scoped
 // severity, the project the error belongs to, that project's own code, a
 // message carrying the offending value, and where it was made; checked by name,
 // with no conversion to bool.

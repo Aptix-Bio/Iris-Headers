@@ -1,7 +1,8 @@
 # DownstreamBuild_1.2: when a pull request closes by merging, start each
-# consumer's own CI against the merged commit (Ryan, 2026-11-12: "we should
-# make sure to trigger downstream dependency repos CIs as well"; "Only for
-# closing PRs"). A merge lands as a push to main, so this runs on that push and
+# consumer's own CI against the merged commit (decided 2026-11-12: a change
+# here is proven in each dependent repository's own CI, and only for pull
+# requests closed by merging, since an unmerged change never reaches a
+# consumer). A merge lands as a push to main, so this runs on that push and
 # dispatches only when GitHub associates the pushed commit with a merged pull
 # request; a direct push dispatches nothing. Running on push instead of
 # pull_request_target keeps every input trusted: the event carries no
