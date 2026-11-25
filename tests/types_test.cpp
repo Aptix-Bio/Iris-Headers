@@ -492,3 +492,16 @@ TEST_CASE("MetadataType matches IFE's metadata_formats value for value, so free 
     CHECK(static_cast<int>(IrisSlide::METADATA_FREE_TEXT) == 3);
     CHECK(IrisSlide::METADATA_FREE_TEXT != IrisSlide::METADATA_I2S);
 }
+
+TEST_CASE("Encoding matches IFE's tile_encodings value for value: AV1 holds 3, and associated images keep AVIF", "[Encoding]") {
+    // IFE spec/ife_constants.json, tile_encodings: IRIS 1, JPEG 2, AV1 3 (AV1
+    // replaced AVIF at 3, decided 2026-11-25). A cache entry stores a tile in a
+    // tile encoding, so each cache value equals its tile value. image_encodings
+    // keeps AVIF at 3 for associated images.
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_UNDEFINED == 0);
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_IRIS == 1);
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_JPEG == 2);
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_AV1 == 3);
+    STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_AV1) == static_cast<int>(IrisSlide::TILE_ENCODING_AV1));
+    STATIC_CHECK(IrisSlide::IMAGE_ENCODING_AVIF == 3);
+}
