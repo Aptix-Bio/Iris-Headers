@@ -134,6 +134,17 @@ enum IRIS_EXPORT Encoding : uint8_t {
     /// spec change); no .iris file in use carried AVIF tiles, so the value was
     /// reassigned instead of retired. Associated images keep IMAGE_ENCODING_AVIF.
     TILE_ENCODING_AV1                       = 3,
+    /// GPU block-compressed UASTC LDR 4x4 (Basis Universal), stored bare: one
+    /// Zstandard frame whose content is the tile's 16-byte blocks in raster
+    /// order, one focal plane and one mip level. Transcoded by the reader to
+    /// ASTC 4x4 (lossless) or BC7 instead of decoded to pixels. Added
+    /// 2026-11-25 with IFE's matching spec change (tile_encodings 1.1).
+    TILE_ENCODING_UASTC                     = 4,
+    /// GPU block-compressed XUASTC LDR (Basis Universal), stored bare: one
+    /// XUASTC LDR bitstream, one focal plane and one mip level. Its block
+    /// footprint and whether its bitstream is fixed across Basis Universal
+    /// versions are open in IFE's specification. Added 2026-11-25.
+    TILE_ENCODING_XUASTC                    = 5,
     TILE_ENCODING_DEFAULT                   = TILE_ENCODING_JPEG //v2025.1 - will change
 };
 // Values equal IFE's metadata_formats (spec/ife_constants.json). METADATA_I2S
@@ -246,6 +257,8 @@ enum IRIS_EXPORT CacheEncoding : uint8_t {
     CACHE_ENCODING_IRIS                     = TILE_ENCODING_IRIS,
     CACHE_ENCODING_JPEG                     = TILE_ENCODING_JPEG,
     CACHE_ENCODING_AV1                      = TILE_ENCODING_AV1,
+    // Cache values stop mirroring tile values here: LZ and no compression hold
+    // 4 and 5, which TILE_ENCODING_UASTC and TILE_ENCODING_XUASTC also hold.
     CACHE_ENCODING_LZ,
     CACHE_ENCODING_NO_COMPRESSION
 };
