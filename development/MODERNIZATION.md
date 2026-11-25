@@ -264,6 +264,9 @@ building.
 - [ ] **ClinicalRange_5.3** — clinical metadata as offset, size and encoding (§3)
 - [ ] **TileEncodings_5.4** — `UASTC`, `XUASTC`, `AV1` encodings and the in-focus plane, with IFE's M3 (Iris-Core D8, D9, D22)
   - [ ] **TileEncodingAv1_5.4.1** — value 3 holds AV1 in place of AVIF (TileEncodingAv1Question_7): `TILE_ENCODING_AV1` and `CACHE_ENCODING_AV1` in `include/IrisSlideTypes.hpp`, held by the type test `Encoding matches IFE's tile_encodings value for value`. Owes a green `downstream` run with the consumers' paired branches
+- [ ] **EncodeSlideInfoAttributes_5.5** — decided 2026-11-25: the encoder takes a slide's attributes from its caller. `EncodeSlideInfo::attributes` is the existing `Attributes` (key text, value text, `MetadataType`, the format's `uint16_t` version), so a caller writes the same type a slide's `Metadata` reads back and Iris-Headers depends on no vocabulary: the Iris Interoperability Specification's pairs (`METADATA_I2S`) arrive as plain text. The defaults are empty, `METADATA_UNDEFINED` and version 0, so no I2S version is assumed: how one packs into IFE's 16-bit `ATTRIBUTES.VERSION` is open in both specifications. Iris-Slide's paired `feature/ReviewBot_17.8` writes the pairs. Owes a green `downstream` run with that branch
+  - [x] Red: the type tests fail to compile, "no member named 'attributes' in 'IrisSlide::EncodeSlideInfo'" ([6210a5c](https://github.com/Aptix-Bio/Iris-Headers/commit/6210a5c6735567227187a5b0ad2fdbf2efe9c7e3))
+  - [x] Green: the type tests, 28 of 28 pass (`-DIRIS_HEADERS_BUILD_TYPE_TESTS=ON`, every header compiled alone); `check_runner_labels`, `downstream_verdict_test` and `check_review_configuration` pass
 
 ### SecondRelease_6
 

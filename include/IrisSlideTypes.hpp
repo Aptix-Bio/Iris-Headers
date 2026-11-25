@@ -323,6 +323,15 @@ struct IRIS_EXPORT EncodeSlideInfo {
     unsigned        concurrency             = std::thread::hardware_concurrency();
     Context         context                 = NULL;
     Derivation*     derivation              = NULL;
+    /// The slide's attribute pairs as the caller states them: key text, value
+    /// text, their format and that format's version. When not empty they are
+    /// the slide's one attributes block, in place of the pairs read from the
+    /// source (IFE's METADATA holds one ATTRIBUTES_OFFSET). The encoder checks
+    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes);
+    /// whether a key belongs to the format is that format's check. The
+    /// defaults state nothing, so no version is assumed: how an I2S version
+    /// packs into ATTRIBUTES.VERSION is open, and the caller passes the value.
+    Attributes      attributes;
 };
 struct IRIS_EXPORT EncodeStreamInfo {
     using Derivation                        = EncoderDerivation;
