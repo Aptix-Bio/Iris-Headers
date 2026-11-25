@@ -127,7 +127,13 @@ enum IRIS_EXPORT Encoding : uint8_t {
     TILE_ENCODING_UNDEFINED                 = 0,
     TILE_ENCODING_IRIS                      = 1,
     TILE_ENCODING_JPEG                      = 2,
-    TILE_ENCODING_AVIF                      = 3,
+    /// A bare AV1 sequence in the Low Overhead Bitstream Format (AV1 bitstream
+    /// specification, "Low overhead bitstream format"), with no container: one
+    /// shown frame per focal plane, so a single-plane tile is one key frame.
+    /// Replaced AVIF tiles at value 3 (decided 2026-11-25, with IFE's matching
+    /// spec change); no .iris file in use carried AVIF tiles, so the value was
+    /// reassigned instead of retired. Associated images keep IMAGE_ENCODING_AVIF.
+    TILE_ENCODING_AV1                       = 3,
     TILE_ENCODING_DEFAULT                   = TILE_ENCODING_JPEG //v2025.1 - will change
 };
 // Values equal IFE's metadata_formats (spec/ife_constants.json). METADATA_I2S
@@ -239,7 +245,7 @@ enum IRIS_EXPORT CacheEncoding : uint8_t {
     CACHE_ENCODING_UNDEFINED                = 0,
     CACHE_ENCODING_IRIS                     = TILE_ENCODING_IRIS,
     CACHE_ENCODING_JPEG                     = TILE_ENCODING_JPEG,
-    CACHE_ENCODING_AVIF                     = TILE_ENCODING_AVIF,
+    CACHE_ENCODING_AV1                      = TILE_ENCODING_AV1,
     CACHE_ENCODING_LZ,
     CACHE_ENCODING_NO_COMPRESSION
 };
@@ -270,7 +276,8 @@ struct IRIS_EXPORT CacheStoreInfo {
 };
 
 // MARK: - ENCODER TYPE DEFINITIONS
-/// Image encoding quality [0-100]. Maps to JPEG and AVIF quality standard
+/// Encoding quality [0-100]: JPEG quality for JPEG tiles and images, and the
+/// encoder's quality scale for AV1 tiles and AVIF associated images
 using               Quality                 = uint16_t;
 constexpr Quality   QUALITY_DEFAULT         = 90;
 

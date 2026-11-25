@@ -164,6 +164,7 @@ Each question has a proposal and its dated answer.
 | BreakingReleaseQuestion_4 | One breaking release (2.0.0) with every consumer moved in step, or a release that deprecates first and removes in the next? | **Answered 2026-11-12: one breaking release**, as proposed; the downstream build (SafetyNet_1) proves each consumer before the tag, and no deprecation shim is written |
 | StrongIndicesQuestion_5 | Strong indices for `LayerIndex`, `TileIndex`, `ImageIndex`, plus `PlaneIndex` (Z-stacks)? | **Answered 2026-11-12: strong indices**, one `StrongIndex<Tag>` template, as proposed; IFE's generator emits them |
 | MemoryArenaQuestion_6 | Does `MemoryArena` (from FastFHIR) stay here? | **Answered 2026-11-12: it stays**, in the `iris_headers_runtime` library with Buffer, Queue and Async, since IFE and Iris-Codec both need it and IFE cannot depend on the codec |
+| TileEncodingAv1Question_7 | What does tile encoding value 3 hold, AVIF or AV1? | **Decided 2026-11-25: AV1.** `TILE_ENCODING_AVIF = 3` becomes `TILE_ENCODING_AV1 = 3`: a bare AV1 sequence in the Low Overhead Bitstream Format of the [AV1 bitstream specification](https://aomediacodec.github.io/av1-spec/) (read 2026-11-25), one shown frame per focal plane, a single-plane tile one key frame, with no container. `CACHE_ENCODING_AVIF` follows as `CACHE_ENCODING_AV1`, since a cache entry holds a tile in a tile encoding. No .iris file in use carries AVIF tiles, so the value is reassigned without an alias. `IMAGE_ENCODING_AVIF` (associated images) and the libavif pin stay. IFE makes the matching spec change |
 
 ## 5. Work breakdown
 
@@ -262,6 +263,7 @@ building.
 - [ ] **MicronsPerPlane_5.2** — `Metadata::micronsPerPlane` (§2)
 - [ ] **ClinicalRange_5.3** — clinical metadata as offset, size and encoding (§3)
 - [ ] **TileEncodings_5.4** — `UASTC`, `XUASTC`, `AV1` encodings and the in-focus plane, with IFE's M3 (Iris-Core D8, D9, D22)
+  - [ ] **TileEncodingAv1_5.4.1** — value 3 holds AV1 in place of AVIF (TileEncodingAv1Question_7): `TILE_ENCODING_AV1` and `CACHE_ENCODING_AV1` in `include/IrisSlideTypes.hpp`, held by the type test `Encoding matches IFE's tile_encodings value for value`. Owes a green `downstream` run with the consumers' paired branches
 
 ### SecondRelease_6
 
