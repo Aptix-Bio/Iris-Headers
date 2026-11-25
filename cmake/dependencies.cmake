@@ -25,6 +25,8 @@ set(IRIS_DEP_HWY            "1.2.0")      # source-build fallback tag
 set(IRIS_DEP_ZLIB_NG        "2.3.3")
 set(IRIS_DEP_LIBPNG         "v1.6.50")
 set(IRIS_DEP_JPEG_TURBO     "3.2.0")
+# libavif: AVIF associated images (IMAGE_ENCODING_AVIF). Tiles are bare AV1
+# since 2026-11-25 (TILE_ENCODING_AV1) and need no AVIF container.
 set(IRIS_DEP_LIBAVIF        "v1.4.2")
 set(IRIS_DEP_LIBDICOM       "v1.3.0")
 

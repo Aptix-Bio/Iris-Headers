@@ -127,7 +127,24 @@ enum IRIS_EXPORT Encoding : uint8_t {
     TILE_ENCODING_UNDEFINED                 = 0,
     TILE_ENCODING_IRIS                      = 1,
     TILE_ENCODING_JPEG                      = 2,
-    TILE_ENCODING_AVIF                      = 3,
+    /// A bare AV1 sequence in the Low Overhead Bitstream Format (AV1 bitstream
+    /// specification, "Low overhead bitstream format"), with no container: one
+    /// shown frame per focal plane, so a single-plane tile is one key frame.
+    /// Replaced AVIF tiles at value 3 (decided 2026-11-25, with IFE's matching
+    /// spec change); no .iris file in use carried AVIF tiles, so the value was
+    /// reassigned instead of retired. Associated images keep IMAGE_ENCODING_AVIF.
+    TILE_ENCODING_AV1                       = 3,
+    /// GPU block-compressed UASTC LDR 4x4 (Basis Universal), stored bare: one
+    /// Zstandard frame whose content is the tile's 16-byte blocks in raster
+    /// order, one focal plane and one mip level. Transcoded by the reader to
+    /// ASTC 4x4 (lossless) or BC7 instead of decoded to pixels. Added
+    /// 2026-11-25 with IFE's matching spec change (tile_encodings 1.1).
+    TILE_ENCODING_UASTC                     = 4,
+    /// GPU block-compressed XUASTC LDR (Basis Universal), stored bare: one
+    /// XUASTC LDR bitstream, one focal plane and one mip level. Its block
+    /// footprint and whether its bitstream is fixed across Basis Universal
+    /// versions are open in IFE's specification. Added 2026-11-25.
+    TILE_ENCODING_XUASTC                    = 5,
     TILE_ENCODING_DEFAULT                   = TILE_ENCODING_JPEG //v2025.1 - will change
 };
 // Values equal IFE's metadata_formats (spec/ife_constants.json). METADATA_I2S
@@ -239,7 +256,9 @@ enum IRIS_EXPORT CacheEncoding : uint8_t {
     CACHE_ENCODING_UNDEFINED                = 0,
     CACHE_ENCODING_IRIS                     = TILE_ENCODING_IRIS,
     CACHE_ENCODING_JPEG                     = TILE_ENCODING_JPEG,
-    CACHE_ENCODING_AVIF                     = TILE_ENCODING_AVIF,
+    CACHE_ENCODING_AV1                      = TILE_ENCODING_AV1,
+    // Cache values stop mirroring tile values here: LZ and no compression hold
+    // 4 and 5, which TILE_ENCODING_UASTC and TILE_ENCODING_XUASTC also hold.
     CACHE_ENCODING_LZ,
     CACHE_ENCODING_NO_COMPRESSION
 };
@@ -270,7 +289,8 @@ struct IRIS_EXPORT CacheStoreInfo {
 };
 
 // MARK: - ENCODER TYPE DEFINITIONS
-/// Image encoding quality [0-100]. Maps to JPEG and AVIF quality standard
+/// Encoding quality [0-100]: JPEG quality for JPEG tiles and images, and the
+/// encoder's quality scale for AV1 tiles and AVIF associated images
 using               Quality                 = uint16_t;
 constexpr Quality   QUALITY_DEFAULT         = 90;
 
@@ -316,6 +336,15 @@ struct IRIS_EXPORT EncodeSlideInfo {
     unsigned        concurrency             = std::thread::hardware_concurrency();
     Context         context                 = NULL;
     Derivation*     derivation              = NULL;
+    /// The slide's attribute pairs as the caller states them: key text, value
+    /// text, their format and that format's version. When not empty they are
+    /// the slide's one attributes block, in place of the pairs read from the
+    /// source (IFE's METADATA holds one ATTRIBUTES_OFFSET). The encoder checks
+    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes);
+    /// whether a key belongs to the format is that format's check. The
+    /// defaults state nothing, so no version is assumed: how an I2S version
+    /// packs into ATTRIBUTES.VERSION is open, and the caller passes the value.
+    Attributes      attributes;
 };
 struct IRIS_EXPORT EncodeStreamInfo {
     using Derivation                        = EncoderDerivation;
