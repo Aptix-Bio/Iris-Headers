@@ -519,3 +519,15 @@ TEST_CASE("EncodeSlideInfo carries the caller's attributes, empty, unformatted a
     CHECK(info.attributes.type == IrisSlide::METADATA_UNDEFINED);
     CHECK(info.attributes.version == 0);
 }
+
+TEST_CASE("Encoding matches IFE's tile_encodings value for value: UASTC holds 4 and XUASTC 5, and the cache keeps LZ and no compression at 4 and 5", "[Encoding]") {
+    // IFE spec/ife_constants.json, tile_encodings 1.1: UASTC 4, XUASTC 5, the
+    // GPU block-compressed encodings (decided 2026-11-25). CacheEncoding does
+    // not mirror them: its LZ and no-compression members already hold 4 and 5,
+    // and a UASTC or XUASTC cache value equal to its tile value would renumber
+    // both under Iris-Slide's cache.
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_UASTC == 4);
+    STATIC_CHECK(IrisSlide::TILE_ENCODING_XUASTC == 5);
+    STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_LZ) == 4);
+    STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_NO_COMPRESSION) == 5);
+}
