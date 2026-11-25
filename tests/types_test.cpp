@@ -505,3 +505,17 @@ TEST_CASE("Encoding matches IFE's tile_encodings value for value: AV1 holds 3, a
     STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_AV1) == static_cast<int>(IrisSlide::TILE_ENCODING_AV1));
     STATIC_CHECK(IrisSlide::IMAGE_ENCODING_AVIF == 3);
 }
+
+TEST_CASE("EncodeSlideInfo carries the caller's attributes, empty, unformatted and unversioned by default", "[Metadata][Encoder]") {
+    // EncodeSlideInfoAttributes_5.5 (decided 2026-11-25): the encoder takes a
+    // slide's attribute pairs with their format and version, as the same
+    // Attributes a slide's Metadata reads back. The defaults state nothing, so
+    // the encoder keeps the source's pairs and no I2S version is invented: how
+    // an I2S version packs into ATTRIBUTES.VERSION is open in both
+    // specifications, and the caller passes the value.
+    STATIC_CHECK(std::is_same_v<decltype(IrisSlide::EncodeSlideInfo::attributes), IrisSlide::Attributes>);
+    const IrisSlide::EncodeSlideInfo info;
+    CHECK(info.attributes.empty());
+    CHECK(info.attributes.type == IrisSlide::METADATA_UNDEFINED);
+    CHECK(info.attributes.version == 0);
+}
