@@ -54,8 +54,8 @@ inline constexpr std::size_t kTaskStorage = 88;
 
 /// A move-only callable taking and returning nothing, held in fixed inline
 /// storage and run at most once. A callable that does not fit kTaskStorage, or
-/// whose move can throw, does not build one (Iris-Core's Callback follows the
-/// same rule): capture a pointer to large state instead of the state.
+/// whose move can throw, does not build one, so that running it never allocates
+/// and never throws: capture a pointer to large state instead of the state.
 class Task {
     template <class F>
     static constexpr bool kStoredInline = sizeof(F) <= kTaskStorage && alignof(F) <= alignof(std::max_align_t) &&

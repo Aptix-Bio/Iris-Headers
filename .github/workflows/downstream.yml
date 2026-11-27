@@ -65,7 +65,8 @@ jobs:
         include:
           - { os: blacksmith-2vcpu-ubuntu-2404, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
           - { os: blacksmith-6vcpu-macos-15, configure: "-G Ninja -DCMAKE_CXX_COMPILER=clang++" }
-          # The default Visual Studio generator with its ClangCL toolset (Iris-Core D38).
+          # The default Visual Studio generator with its ClangCL toolset, the Windows compiler the Iris
+          # consumers build with.
           - { os: blacksmith-2vcpu-windows-2025, configure: "-T ClangCL" }
     defaults:
       run:
