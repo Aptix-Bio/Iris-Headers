@@ -84,14 +84,16 @@ flowchart LR
    and no key; both run only for a pull request from a branch of this repository, and
    `fork-skipped` states why a fork's gets no model review. The bot is checked out from
    Aptix-Bio/governance at `GOVERNANCE_COMMIT` with `GOVERNANCE_READ_TOKEN`, which reaches that
-   checkout step alone. `cmake/check_review_configuration.cmake` fails naming each broken
+   checkout step and, as `planning-token`, the bot's action in both jobs, which fetches the
+   privately kept rules and plans read-only (rule 10); no other step receives it. `cmake/check_review_configuration.cmake` fails naming each broken
    property.
 10. **The rubric is read from the default branch.** `.github/review/rubric.toml` names the items
     and this repository's own documents (`development/ARCHITECTURE.md`, this file,
     `development/README.md`, `CONTRIBUTING.md`), read from the default branch so that a pull
     request cannot change the rules it is judged by. The family's shared rules and items, and this
-    repository's work breakdown, requirement rows and errata, are kept privately; the bot reads
-    them from its own checkout, and the rubric names them by file name only.
+    repository's work breakdown, requirement rows and errata, are kept privately; the bot's action
+    fetches them read-only with `planning-token` into its own checkout, the bot reads them with
+    `--planning`, and the rubric names them by file name only.
     `check_review_configuration.cmake` fails when a file the rubric names here is missing, or a
     privately kept file is named by a path. The rubric, `review.yml`, CODEOWNERS and `cmake/` are
     code-owner files.

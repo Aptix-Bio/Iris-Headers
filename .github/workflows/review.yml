@@ -15,8 +15,10 @@
 # only from private repositories": docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository,
 # read 2026-11-24), so this public repository cannot name it in `uses:`. Each job checks it out at
 # GOVERNANCE_COMMIT with GOVERNANCE_READ_TOKEN, a fine-grained token with Contents: read on
-# Aptix-Bio/governance alone, and runs its composite action from that path. The token is given to
-# that checkout step and nothing else, and governance stays private. The action reports the
+# Aptix-Bio/governance and on the private repository of the family's shared rules and plans
+# (reissued 2026-11-27), and runs its composite action from that path. The token goes to that
+# checkout step and, as `planning-token`, to the bot's action in both jobs, which fetches the
+# rules and plans read-only and masks it; no other step receives it, and governance stays private. The action reports the
 # commit it ran from as `github.action_ref`, which GitHub sets for an action named in `uses:` with
 # a ref; a local path has none, so BOT_REF is the pin itself.
 #
@@ -55,8 +57,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Aptix-Bio/governance at the merge of its PR 12 (untagged), the bot that keeps each pull
-  # request's reviews as one conversation in the Actions cache.
+  # Aptix-Bio/governance at the merge of its PR 13 (59cfd33, untagged): the bot that reads the
+  # rubric's shared rules and items and this repository's privately kept plans from a read-only
+  # checkout its action makes with `planning-token`, and keeps each pull request's reviews as one
+  # conversation in the Actions cache.
   GOVERNANCE_COMMIT: 59cfd336d368529ac2264ac316d8e93632e65b1c
 
 jobs:
