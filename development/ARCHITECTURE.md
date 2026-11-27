@@ -83,6 +83,14 @@ Who includes what, today:
 | `priv/IrisSIMD.hpp` | — | yes | — |
 | `priv/IrisCoreVulkan.hpp`, `IrisCorePython.hpp` | — | `IrisCoreVulkan.hpp` | — |
 
+*Amended 2026-11-27 (EncoderSurface_5.6):* the table above keeps the names it was read with.
+`IrisCodecTypes.hpp` and `IrisCodecCore.hpp` are now `IrisSlideTypes.hpp` and `IrisSlideCore.hpp`
+(renamed 2026-11-24); `IrisSlideTypes.hpp` carries the encoder's `EncoderDesc`, `EncoderState` and
+`EncoderProgress`, and `IrisSlideCore.hpp` its five calls (`create_encoder`, `dispatch_encoder`,
+`encoder_progress`, `interrupt_encoder`, `encoder_output_name`), which replace
+`EncodeSlideInfo`, `EncodeStreamInfo`, `EncoderStatus`, `EncoderDerivation` and the earlier
+encoder calls. IFE includes `IrisSlideTypes.hpp` and uses none of the encoder's types.
+
 ## 3. Target
 
 ```mermaid
