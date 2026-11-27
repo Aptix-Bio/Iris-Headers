@@ -27,6 +27,11 @@
 #define IrisSlideTypes_h
 // Codec types rely upon the Iris Core types
 // and the Core types header must be included.
+#include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <thread>
 #include "IrisTypes.hpp"
 namespace   Iris {
 using       Instance        = std::shared_ptr<struct Instance_t>;
@@ -97,11 +102,8 @@ using       Cache           = std::shared_ptr<class Cache_t>;
  * @brief Encodes a single whole slide image from another WSI format or Cache at a time
  * using the maximal CPU cores. 
  * 
- * The encoder is an encapsulated encoding routine with multi-threaded WSI processing.
- * The encoder can encode a new Iris WSI file (IFE) from a vendor slide file or may
- * create a new WSI file de novo from a set of cached slide tiles (either compressed
- * or decompressed based upon Cache settings).
- * 
+ * The encoder reads a slide and writes it as an Iris file (IFE): made by create_encoder from an
+ * EncoderDesc, dispatched once, followed with encoder_progress.
  */
 using       Encoder         = std::shared_ptr<class Encoder_t>;
 
@@ -303,65 +305,46 @@ enum IRIS_EXPORT Subsampling : uint8_t {
     SUBSAMPLE_DEFAULT                       = SUBSAMPLE_422,
 };
 
-/// Current status of the encoder object.
-enum IRIS_EXPORT EncoderStatus {
-    ENCODER_INACTIVE,
-    ENCODER_ACTIVE,
-    ENCODER_ERROR,
-    ENCODER_SHUTDOWN,
-};
-
-/// If encoder derive enabled
-struct IRIS_EXPORT EncoderDerivation {
-    enum Layers {
-        ENCODER_DERIVE_UNDEFINED,
-        ENCODER_DERIVE_USE_SOURCE,
-        ENCODER_DERIVE_2X_LAYERS,           // Will generate ~8 layers (256px->128,64,32,16,8,4,2,1)
-        ENCODER_DERIVE_4X_LAYERS,           // Will generate ~4 layers (256px->64,16,4,1)
-    }               layers                  = ENCODER_DERIVE_2X_LAYERS;
-    enum Method {
-        ENCODER_DOWNSAMPLE_UNDEFINED,
-        ENCODER_DOWNSAMPLE_AVERAGE,         // Downsampling by simple averaging
-        ENCODER_DOWNSAMPLE_SHARPEN,         // Downsampling while preserving high-freqency info
-    }               method                  = ENCODER_DOWNSAMPLE_AVERAGE;
-};
-struct IRIS_EXPORT EncodeSlideInfo {
-    using Derivation                        = EncoderDerivation;
-    std::string     srcFilePath;
-    std::string     dstFilePath;
-    Format          srcFormat               = Iris::FORMAT_UNDEFINED;
-    Encoding        desiredEncoding         = TILE_ENCODING_UNDEFINED;
-    Format          desiredFormat           = Iris::FORMAT_UNDEFINED;
-    bool            anonymize               = false;
-    unsigned        concurrency             = std::thread::hardware_concurrency();
-    Context         context                 = NULL;
-    Derivation*     derivation              = NULL;
-    /// The slide's attribute pairs as the caller states them: key text, value
-    /// text, their format and that format's version. When not empty they are
-    /// the slide's one attributes block, in place of the pairs read from the
-    /// source (IFE's METADATA holds one ATTRIBUTES_OFFSET). The encoder checks
-    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes);
-    /// whether a key belongs to the format is that format's check. The
-    /// defaults state nothing, so no version is assumed: how an I2S version
-    /// packs into ATTRIBUTES.VERSION is open, and the caller passes the value.
+/// What to encode, where and how (EncoderSurface_24.1, decided 2026-11-27): the rebuilt encoder reads
+/// the slide at `source`, derives every lower layer by a 2x bicubic reduction, and writes
+/// <source stem>.<encoding>.iris into `destination`. Made into an Encoder by create_encoder.
+struct IRIS_EXPORT EncoderDesc {
+    std::filesystem::path source;                         ///< the slide: a DICOM whole-slide instance (JPEG, JPEG 2000 or HTJ2K frames)
+    std::filesystem::path destination;                    ///< the folder the .iris file is written to
+    Encoding        encoding      = TILE_ENCODING_JPEG;   ///< the IFE tile encoding written
+    Quality         quality       = QUALITY_DEFAULT;      ///< JPEG quality, 1-100
+    Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< JPEG chroma subsampling
+    std::uint64_t   memory_budget = 0;                    ///< bytes held at once; 0 is a quarter of physical memory
+    std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads
+    /// The scale between written layers: 2, 4, 8 … Layers are derived 2x at a time and every
+    /// log2(layer_step)-th is written, down to one that fits one tile.
+    std::uint32_t   layer_step    = 2;
+    /// The slide's attribute pairs as the caller states them: key text, value text, their format
+    /// and that format's version, written as the slide's one attributes block. The encoder checks
+    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes) and refuses a format
+    /// other than METADATA_I2S or version 0; whether a key belongs to I2S is I2S's check. Nothing
+    /// is read from the source's own attributes.
     Attributes      attributes;
 };
-struct IRIS_EXPORT EncodeStreamInfo {
-    using Derivation                        = EncoderDerivation;
-    std::string     dstFilePath;
-    uint32_t        width                   = 0;
-    uint32_t        height                  = 0;
-    Format          srcFormat               = Iris::FORMAT_UNDEFINED;
-    Encoding        desiredEncoding         = TILE_ENCODING_UNDEFINED;
-    Format          desiredFormat           = Iris::FORMAT_UNDEFINED;
-    Context         conxtext                = NULL;
-    Derivation      derivation;
+
+/// An encoder is used once: dispatched from READY, it ends DONE, FAILED or INTERRUPTED.
+enum class IRIS_EXPORT EncoderState : std::uint8_t {
+    READY,
+    ACTIVE,
+    DONE,
+    FAILED,
+    INTERRUPTED,
 };
+
+/// A snapshot of an encode (encoder_progress).
 struct IRIS_EXPORT EncoderProgress {
-    EncoderStatus   status                  = ENCODER_INACTIVE;
-    float           progress                = 0.f;
-    std::string     dstFilePath;
-    std::string     errorMsg;
+    EncoderState          state               = EncoderState::READY;
+    float                 fraction            = 0.f;   ///< tiles written over tiles in the file
+    std::filesystem::path file;                        ///< the .iris file it writes
+    std::string           error;                       ///< why it FAILED, naming the offending value
+    std::uint64_t         resident_bytes      = 0;     ///< tile bytes held now
+    std::uint64_t         peak_resident_bytes = 0;     ///< the most ever held
+    std::uint64_t         memory_budget       = 0;     ///< the budget it keeps to
 };
 } // END IRIS SLIDE NAMESPACE
 #endif /* IrisSlideTypes_h */

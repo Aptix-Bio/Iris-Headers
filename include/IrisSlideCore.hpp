@@ -70,37 +70,23 @@ IRIS_EXPORT Result cache_store_entry        (const CacheStoreInfo&) noexcept;
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 //      Slide Encoder                                                       //
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-/// Slide encoder converts a vendor sldie format to
-/// the Iris File Extension using the information provided within the encode slide info structure.
-IRIS_EXPORT Encoder create_encoder          (EncodeSlideInfo&) noexcept;
+/// An encoder for desc.source, written through @p encoder. Refuses, naming the value: a source no
+/// source kind reads, an encoding the encoder does not write, a quality outside 1-100, a destination
+/// that is not a folder, a layer step that is not a power of two from 2, a memory budget below the
+/// slide's smallest working set, and attributes IFE cannot hold or that are not METADATA_I2S.
+IRIS_EXPORT Result create_encoder           (const EncoderDesc& desc, Encoder& encoder) noexcept;
 
-/// Reset an active encoder object.
-IRIS_EXPORT Result reset_encoder            (Encoder&) noexcept;
-
-/// Dispatch the encoder.
+/// Starts the encode on the encoder's own threads and returns. Refuses an encoder that is not READY.
 IRIS_EXPORT Result dispatch_encoder         (const Encoder&) noexcept;
 
-/// Stop an encoder immediately (safely)
+/// A snapshot of the encode.
+IRIS_EXPORT Result encoder_progress         (const Encoder&, EncoderProgress& progress) noexcept;
+
+/// Stops an ACTIVE encode; it ends INTERRUPTED and leaves no file.
 IRIS_EXPORT Result interrupt_encoder        (const Encoder&) noexcept;
 
-/// Return the encoder progress on an active encoding
-IRIS_EXPORT Result get_encoder_progress     (const Encoder&, EncoderProgress&) noexcept;
-
-/// Return an encoder object source file path.
-IRIS_EXPORT Result get_encoder_src          (const Encoder&, std::string& src_string) noexcept;
-
-/// Return an encoder object  destination directory path
-IRIS_EXPORT Result get_encoder_dst_path     (const Encoder&, std::string& dst_string) noexcept;
-
-/// Set an encoder object source file path, if not active. Attempting to alter an active encoder will fail.
-IRIS_EXPORT Result set_encoder_src          (const Encoder&, const std::string&) noexcept;
-
-/// Set the an Iris Temporary Cache file as the encoder source (ADVANCED FEATURE; read about this first).
-/// This function is useful for scanner manufacturers who write into a cache and then encode a slide from that local dump.
-IRIS_EXPORT Result set_encoder_src_cache    (const Encoder&, const Cache&) noexcept;
-
-/// Set an encoder object output directory path. Attempting to alter an active encoder will fail.
-IRIS_EXPORT Result set_encoder_dst_path     (const Encoder&, const std::string&) noexcept;
-
+/// The file name an encode of @p source in @p encoding writes, <source stem>.<encoding>.iris.
+IRIS_EXPORT Result encoder_output_name      (const std::filesystem::path& source, Encoding encoding,
+                                             std::string& name) noexcept;
 }
 #endif /* IrisSlideCore_h */

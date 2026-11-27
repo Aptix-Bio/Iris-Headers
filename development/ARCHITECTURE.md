@@ -75,8 +75,8 @@ Who includes what, today:
 | Header | IFE | Iris-Slide | A proprietary consumer (planned) |
 |---|---|---|---|
 | `IrisTypes.hpp` (`Result`, `Buffer` handle, extents, annotations, formats) | yes | yes | yes |
-| `IrisCodecTypes.hpp` (slide metadata, encodings, images; codec handles) | yes | yes | for its CPU decode path |
-| `IrisCodecCore.hpp` (codec API) | — | yes | for its CPU decode path |
+| `IrisSlideTypes.hpp` (slide metadata, encodings, images; codec handles; the encoder's `EncoderDesc` and `EncoderProgress`) | yes | yes | for its CPU decode path |
+| `IrisSlideCore.hpp` (Iris-Slide's API, the encoder's included) | — | yes | for its CPU decode path |
 | `IrisCore.hpp` (IrisV2 viewer API, Buffer functions) | — | yes (Buffer functions) | — |
 | `priv/IrisBuffer.hpp`, `IrisQueue.hpp`, `IrisAsync.hpp` | — | yes | yes |
 | `priv/IrisMemory.hpp` | yes | — | — |
