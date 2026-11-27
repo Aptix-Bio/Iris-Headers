@@ -1,10 +1,10 @@
-# BlacksmithRunners_1.4 (development/MODERNIZATION.md): every job in
+# BlacksmithRunners_1.4 (development/PIPELINE.md, rule 2): every job in
 # .github/workflows runs on a pinned Blacksmith runner (decided 2026-11-24).
 # A GitHub-hosted label
 # (ubuntu-24.04, macos-15, windows-2025) would bill GitHub minutes, which
 # stopped starting jobs in Aptix-Bio's private repositories that day; a
-# -latest label lets the image move under a passing build (Arbiter
-# directives/ci_runners.md, "Pin what can move").
+# -latest label lets the image move under a passing build, so every label
+# names its image's version (development/PIPELINE.md, rule 6, pin what can move).
 #
 #   cmake -P cmake/check_runner_labels.cmake      (from the repository root)
 #

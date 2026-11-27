@@ -1,35 +1,115 @@
-# The review bot's rubric (ReviewBot_1.5, development/MODERNIZATION.md). One [[item]] per checkbox
-# the bot ticks in the pull request's "Agent review" section. The bot runs from Aptix-Bio/governance
-# at the commit .github/workflows/review.yml pins, and loads this file from Iris-Headers' default
-# branch, never from the pull request under review, so a pull request cannot change the rules it
-# is judged by.
+# The review bot's rubric (ReviewBot_1.5). The bot runs from Aptix-Bio/governance at the commit
+# .github/workflows/review.yml pins, and loads this file from Iris-Headers' default branch, never
+# from the pull request under review, so a pull request cannot change the rules it is judged by.
+# The shared items come first, in the family's shared order, with the text this repository adds
+# to each under [shared_guidance]; this repository's own item, HeaderHygiene, follows. One
+# checkbox per item in the pull request's "Agent review" section.
 #
 # An item passes, fails, or does not apply. A failed item with blocking = true fails the
 # `code-review` check; a failed advisory item is reported only. Changing this file changes what
 # every later pull request is held to: it is a code-owner file (.github/CODEOWNERS) and its own
 # pull request says why.
+#
+# The family's general conventions, the shared items, and this repository's work breakdown,
+# requirement rows and errata are kept privately; the bot reads them from its own checkout. They
+# are named here by file name only (PlansPrivate_7.4, decided 2026-11-27).
 
 [review]
 product = "Iris-Headers, the shared public C++ headers of the Iris file format and slide libraries (types, Result, Buffer, the lock-free queue, SIMD helpers), MIT-licensed"
-# The rules the model reviews against, read whole from the default branch; a missing one fails the
-# review. Iris-Headers keeps no requirements matrix: MODERNIZATION.md is its plan, its decisions
-# (§4) and its work breakdown (§5) in one file, and is sent whole because a header change is judged
-# against the target (§3) and the decisions as much as against the work item it names.
+# This repository's own documents, read whole from the default branch; a missing one fails the
+# review. ARCHITECTURE.md is sent whole because a header change is judged against the target (§3)
+# and the decisions (§4) as much as against the work item it names; README.md holds the ID
+# scheme; CONTRIBUTING.md and PIPELINE.md this repository's own rules.
 reference_files = [
-    "development/style_guide.md",
-    "development/ci_runners.md",
-    "development/MODERNIZATION.md",
-    "development/ERRATA.md",
+    "development/ARCHITECTURE.md",
+    "development/PIPELINE.md",
+    "development/README.md",
+    "CONTRIBUTING.md",
 ]
+# The family's general conventions, sent whole.
+shared_reference_files = ["style_guide.md", "ci_runners.md", "planning.md", "public_repositories.md"]
+# The shared items, in the shared order. ClinicalIntegrity is left out: nothing here changes what
+# a pathologist sees.
+shared_items = [
+    "Traceability",
+    "StyleGuide",
+    "MinimumSurface",
+    "TestsFirst",
+    "AbiAndConsumers",
+    "PublicRepository",
+    "SecurityImpact",
+    "Pipeline",
+    "DataProtection",
+    "Documentation",
+    "AgentDisclosure",
+]
+# This repository's errata, sent whole; its work breakdown and requirement rows, sent as the items
+# and rows a pull request names (the bold ID, `**StrongIndices_4.2**`, with the lines nested under
+# it), since they change in almost every pull request and sent whole would end the cached prefix.
+plan_reference_files = ["ERRATA.md"]
+plan_excerpt_files = ["WBS.md", "RTM.md"]
+
+[shared_guidance]
+Traceability = """
+Iris-Headers' IDs are spelled out in full (`StandaloneHeaderBuild_1.1`; development/README.md,
+Identifiers). The description names the work items it completes or advances, the requirement rows
+it touches, and the ARCHITECTURE.md §4 decision it implements, if any. A tick or row links a commit
+of this pull request or of `main`, `[1234567](https://github.com/Aptix-Bio/Iris-Headers/commit/<full hash>)`.
+Code that implements a row carries its `// RTM <ID>` or `# RTM <ID>` tag.
+"""
+StyleGuide = """
+Iris-Headers' own rules are CONTRIBUTING.md; they win where they are more specific. Its boundary
+returns `Iris::Result` with `Iris::Domain::IRIS_HEADERS` and an `Iris::HeadersError` code
+(CONTRIBUTING.md, rule 10).
+"""
+MinimumSurface = """
+`Iris::Result`, `Iris::Buffer`, `Iris::FIFO::Queue`, `Iris::Async::Pool` and `Iris::Memory` are
+reused; a re-implementation of one fails. Iris-Headers holds the shared vocabulary (ARCHITECTURE.md §3,
+VocabularyScopeQuestion_1; CONTRIBUTING.md, rule 8): a project's own API, a graphics API, a
+binding's glue or another project's dependency pins added here fail.
+"""
+TestsFirst = """
+The tests here are the type tests in tests/, the standalone-header check, and a `cmake -P` test
+under cmake/tests/ for a CMake script (CONTRIBUTING.md, rule 15).
+"""
+AbiAndConsumers = """
+A change to anything a consumer compiles (a public type, a member, an enumeration value, a
+layout, a function signature, a header's name or location) states under "Consumer impact" what
+each consumer (Iris-File-Extension and Iris-Slide) must change, and the `downstream` cells for
+both show they build and pass against it (PIPELINE.md, rule 3). Enumeration values that mirror the
+Iris File Extension specification (MetadataType, the tile and image encodings, the formats) stay
+equal to IFE's: a renumbered or reordered value fails. A breaking change follows
+BreakingReleaseQuestion_4 (one breaking release, every consumer moved in step). A coordinated
+breaking change names each consumer's pull request and the order of the merges in its
+description, since merging this repository first breaks each consumer's `main` (CONTRIBUTING.md,
+rules 4 to 7).
+"""
+PublicRepository = """
+Iris-Headers is public under MIT. Aptix-Bio/governance may be named as the source of the review
+bot in .github/ and the documents describing the review. The open-source slide library is
+Iris-Slide (renamed 2026-11-24, ARCHITECTURE.md); a line written after the rename does not call it
+Iris-Codec. A line that only keeps a name already on the line it edits is judged as it was.
+"""
+Pipeline = """
+development/PIPELINE.md holds this repository's pipeline rules. Every job has a pinned Blacksmith
+label (`cmake/check_runner_labels.cmake`); `pull_request_target` appears only in review.yml, whose
+safety properties `cmake/check_review_configuration.cmake` holds; a job that needs a variable or
+secret checks it first (`cmake/require_settings.cmake`).
+"""
+Documentation = """
+The repository's README.md stays true to how a consumer fetches and links the headers.
+"""
 
 [trace]
-# Every new tick in MODERNIZATION.md's work breakdown links to the GitHub commit that did the work;
-# a line that does not fails `item`. Checked by the bot itself. Iris-Headers has no requirements
-# matrix, so no table rows are traced.
+# Every tick in the work breakdown, and every requirement row at these statuses, that the pull
+# request names links the GitHub commit that did the work; a line that does not fails `item`.
+# Both files are kept privately and read from the bot's checkout. Checked by the bot itself.
 item = "Traceability"
-ticks = ["development/MODERNIZATION.md"]
+ticks = []
 rows = []
-row_statuses = []
+row_statuses = ["Implemented", "Verified"]
+plan_ticks = ["WBS.md"]
+plan_rows = ["RTM.md"]
 
 [verification]
 # One maintainer: the pull request's author may give the final human verification until a second
@@ -37,163 +117,15 @@ row_statuses = []
 allow_author = true
 
 [[item]]
-id = "Traceability"
-title = "Traceability: the MODERNIZATION.md work items named; ticks carry evidence and a link to the work commit"
-blocking = true
-guidance = """
-The description names the MODERNIZATION.md work items it completes or advances (spelled out,
-`StandaloneHeaderBuild_1.1`, never `SHB1`) and the §4 decision it implements, if any. Every box
-ticked in the diff has its evidence on the same line (a test, a file, pasted output or a CI run)
-and a link to the commit that did the work,
-`[1234567](https://github.com/Aptix-Bio/Iris-Headers/commit/<full hash>)`. The bot checks the
-links itself; judge only whether each linked commit plausibly does what the line claims. A change
-to code or a workflow without a matching MODERNIZATION.md update in the same pull request fails.
-A mistake that reached `main`, a consumer or a measurement has its row in development/ERRATA.md.
-"""
-
-[[item]]
-id = "StyleGuide"
-title = "Style guide: `development/style_guide.md` followed (no recursion, nesting ≤ 3, RAII, early return, fail loudly, no exception across an API boundary, naming)"
-blocking = true
-guidance = """
-Judge the diff against development/style_guide.md, in full. Most common failures: recursion
-(direct or indirect); nesting deeper than 3; raw new/delete; side effects in conditions; nested
-ternaries; null or empty returned instead of a loud failure; catch (...) outside a boundary's last
-handler; commented-out code; comments that restate the code; an error without its offending
-value; a bare number where a named constant or scoped enumeration belongs. Prose in comments,
-documents and the description follows the guide's Writing section. Name each violation with file
-and line.
-"""
-
-[[item]]
-id = "MinimumSurface"
-title = "Minimum code surface: no near-duplicate routines, no second queue or buffer type, nothing outside the vocabulary"
-blocking = true
-guidance = """
-Similar routines are one routine with an enum or optional argument; repeated code is extracted; a
-new function that already exists is a failure. Result, Buffer, Iris::FIFO::Queue and Iris::Async
-are reused, never re-implemented. Iris-Headers holds the shared vocabulary (MODERNIZATION.md §3,
-VocabularyScopeQuestion_1): a project's own API, a graphics API, a binding's glue or another
-project's dependency pins added here fail.
-"""
-
-[[item]]
-id = "TestsFirst"
-title = "Tests: new behaviour has a test that was shown red first; per-cell results reported; no test weakened to pass"
-blocking = true
-guidance = """
-Behaviour added or changed by the diff is covered by a test in the same pull request (the type
-tests in tests/, the standalone-header check, or a `cmake -P` test under cmake/tests/ for a CMake
-script). The description shows the red run (or links it) and the green run. A test deleted,
-skipped, loosened, or tagged to fail must be explained in the description; unexplained, it fails.
-A test that records existing behaviour may never have been red; the description says so.
-Documentation-only pull requests: not applicable.
-"""
-
-[[item]]
-id = "AbiAndConsumers"
-title = "Consumers: a change to a public type, enumeration value or layout states its effect on IFE and Iris-Slide, and the downstream cells show they build"
-blocking = true
-guidance = """
-A change to anything a consumer compiles (a public type, a member, an enumeration value, a
-layout, a function signature, a header's name or location) states under "Consumer impact" what
-each consumer (Iris-File-Extension and Iris-Slide) must change, and the `downstream` cells for
-both show they build and pass against it. Enumeration values that mirror the Iris File Extension
-specification (for example MetadataType, the tile and image encodings, the formats) stay equal to
-IFE's: a renumbered or reordered value fails. A breaking change follows BreakingReleaseQuestion_4
-(one breaking release, every consumer moved in step). A coordinated breaking change, one whose
-consumers build only from their paired branches, names each consumer's pull request and the order
-in which they merge in its description, since merging this repository first breaks each consumer's
-`main` (development/ERRATA.md, 2026-11-24). A change no consumer compiles: not applicable.
-"""
-
-[[item]]
 id = "HeaderHygiene"
 title = "Header hygiene: every header compiles standalone; no macros for constants; no reserved identifiers"
 blocking = true
 guidance = """
-development/style_guide.md, Headers. Every header the diff adds or changes includes what it uses
-and compiles alone (`cmake/standalone_headers.cmake`; a new public header is added to its list).
+CONTRIBUTING.md, Headers (rules 1 to 3). Every header the diff adds or changes includes what it
+uses and compiles alone (`cmake/standalone_headers.cmake`, which globs include/ and priv/).
 No macro defines a constant, a type or a function that `constexpr`, `inline`, a scoped
 enumeration or a template can express; the export attribute is the exception. No identifier
 begins with an underscore followed by an uppercase letter or contains two underscores in a row,
 and none at global scope begins with an underscore, in any scope the diff touches (include guards
 included). A diff that touches no header or source: not applicable.
-"""
-
-[[item]]
-id = "PublicRepository"
-title = "Public repository: nothing private named, no maintainer quotations, no local paths, no patient data"
-blocking = true
-guidance = """
-Iris-Headers is public under MIT, and everything in it can be read by anyone. Judge the lines the
-diff adds, in files and in the description. A line fails when it newly names a proprietary or
-private product, repository, internal infrastructure, cloud project or account. Two names are
-allowed where they are needed: Aptix-Bio/governance, as the private source of the review bot in
-.github/ and the documents describing the review; and the licensed codec, named only as a library
-that licensees load at runtime. The open-source slide library is Iris-Slide (renamed 2026-11-24,
-MODERNIZATION.md); a line written after the rename does not call it Iris-Codec. A line that only
-keeps a name already on the line it edits is judged as it was. Also fails: a quotation of the
-maintainer or of a private conversation (state a decision as a dated requirement instead), a path
-on someone's machine (`/Users/...`, `C:\\Users\\...`, a home directory), and anything that looks
-like patient data, a slide label or a slide file.
-"""
-
-[[item]]
-id = "SecurityImpact"
-title = "Security impact: the template's section is filled in and matches the diff (input parsing, dependencies, permissions, secrets)"
-blocking = true
-guidance = """
-Compare the "Security impact" answers with the diff. New parsing of input from a file or the
-network bounds every length before use. A new dependency is under a permissive licence (MIT, BSD,
-Apache-2.0, BSL-1.0, Zlib, ISC) and pinned by version and hash. A new or widened workflow
-permission, secret, variable, environment or token is declared and justified. An answer the diff
-contradicts fails.
-"""
-
-[[item]]
-id = "Pipeline"
-title = "Pipeline: workflows pin actions by SHA, start from `permissions: {}`, pass untrusted input through `env:`, keep logic in CMake scripts, bound every job"
-blocking = true
-guidance = """
-Only for changes under .github/ or cmake/ that touch CI (development/ci_runners.md). Every
-third-party action pinned by a full commit SHA with its version in a comment; `permissions: {}` at
-the top and per-job grants; checkout with `persist-credentials: false`; no pull_request_target
-except in review.yml, which checks out the default branch's commit and never checks out or runs
-the head (cmake/check_review_configuration.cmake holds this); no `${{ }}` of untrusted input
-(titles, branch names, bodies) inside `run:`; every job has timeout-minutes and a pinned Blacksmith
-label; a `run:` step calls CMake and its logic lives in a `cmake -P` script, tested. A job that
-needs a variable or secret checks it first (cmake/require_settings.cmake). A change to this
-rubric, the review workflow or the bot's pin is flagged in the findings as needing the
-maintainer's explicit attention, whatever else it does. Not applicable otherwise.
-"""
-
-[[item]]
-id = "DataProtection"
-title = "Data protection: no slides, slide metadata, patient data, secrets, keys or binaries in the diff"
-blocking = true
-guidance = """
-Nothing that looks like a patient identifier, accession number, slide label, date of birth, slide
-file, credential, private key or token. No binary blobs. Any doubt fails, with the file and line.
-"""
-
-[[item]]
-id = "Documentation"
-title = "Documentation: docs describing several types carry Mermaid diagrams that match the code; decisions recorded in MODERNIZATION.md"
-blocking = false
-guidance = """
-A document that describes more than one type or component has a Mermaid classDiagram (or a
-flowchart or sequenceDiagram for flow and lifecycle) that matches the code in this diff and
-renders. A decision that changed is recorded, dated, in MODERNIZATION.md §4 or beside the work
-item it changes. README.md stays true to how a consumer fetches and links the headers.
-"""
-
-[[item]]
-id = "AgentDisclosure"
-title = "AI authorship disclosed: which parts an agent wrote, and with which tool"
-blocking = true
-guidance = """
-The description's "AI authorship" section says whether an AI agent wrote any of the change and
-which parts, and with which tool. Missing or blank fails. The bot does not try to detect
-authorship; it checks the disclosure is present and specific.
 """

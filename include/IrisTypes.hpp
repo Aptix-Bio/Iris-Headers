@@ -395,7 +395,7 @@ struct IRIS_EXPORT ViewerFocalPlaneScope {
 };
 /**
  * @brief One message for the viewer's engine: the bytes of one Envelope of
- * Iris-Core's bridge schema (bridge/protocol.fbs).
+ * the viewer's bridge schema.
  *
  * The bytes are the interface's, passed through unread by the host; the engine
  * verifies them and copies what it keeps, so they may be freed once the call
@@ -415,7 +415,7 @@ struct IRIS_EXPORT ViewerPostInfo {
 inline constexpr size_t VIEWER_BATCH_MAX_BYTES = 65536;
 /**
  * @brief Where to take the engine's next message for the interface: one
- * Batch of Iris-Core's bridge schema (bridge/protocol.fbs).
+ * Batch of the viewer's bridge schema.
  *
  * The bytes are the interface's to read; the host passes them on unread.
  */

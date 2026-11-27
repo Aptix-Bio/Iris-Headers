@@ -1,4 +1,4 @@
-# StandaloneHeaderBuild_1.1 (development/MODERNIZATION.md, SafetyNet_1):
+# StandaloneHeaderBuild_1.1 (SafetyNet_1; CONTRIBUTING.md, rule 1):
 # every header compiles on its own and all of them together, so a header that
 # relies on another being included first fails here instead of in a consumer.
 # CONFIGURE_DEPENDS globbing means a new header is checked without editing

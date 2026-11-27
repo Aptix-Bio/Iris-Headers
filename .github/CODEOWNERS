@@ -1,4 +1,4 @@
-# Who must review what (ReviewBot_1.5, development/MODERNIZATION.md). The review bot reads the
+# Who must review what (ReviewBot_1.5). The review bot reads the
 # logins on the last `*` line, the line GitHub applies, as the owners whose replies in a pull
 # request's conversation may grant an exception to a rubric item. The bot is never a code owner.
 # When a second maintainer joins, add them here.
@@ -11,6 +11,7 @@
 /.github/workflows/                 @ryanlandvater
 /.github/CODEOWNERS                 @ryanlandvater
 /cmake/                             @ryanlandvater
-/development/style_guide.md         @ryanlandvater
-/development/ci_runners.md          @ryanlandvater
-/development/MODERNIZATION.md       @ryanlandvater
+/development/ARCHITECTURE.md        @ryanlandvater
+/development/PIPELINE.md            @ryanlandvater
+/development/README.md              @ryanlandvater
+/CONTRIBUTING.md                    @ryanlandvater

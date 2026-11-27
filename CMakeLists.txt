@@ -39,7 +39,7 @@ if (IRIS_HEADERS_CHECK_STANDALONE)
 endif()
 
 # TypeTests_1.3: the shared types' behaviour, with Catch2 at the version and
-# hash Iris-Core pins. Separate from IRIS_HEADERS_BUILD_TESTS, which needs
+# hash the Iris consumers pin. Separate from IRIS_HEADERS_BUILD_TESTS, which needs
 # Highway for the SIMD kernels; the two options merge when those kernels move
 # to Iris-Slide (Narrow_3, PinsAndSimdMoved_3.3).
 option(IRIS_HEADERS_BUILD_TYPE_TESTS "Build the shared types' Catch2 tests" OFF)

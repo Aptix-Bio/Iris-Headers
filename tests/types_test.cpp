@@ -1,4 +1,4 @@
-// TypeTests_1.3 (development/MODERNIZATION.md, SafetyNet_1): today's behaviour
+// TypeTests_1.3 (SafetyNet_1): today's behaviour
 // of the types consumers rely on, recorded before Modernize_4 rewrites them, so
 // each change there is a visible, deliberate edit to an expectation here.
 //
@@ -141,7 +141,7 @@ TEST_CASE("Buffer: a strong buffer created with a size reports it empty", "[Buff
     CHECK(bytes == 0);
 }
 
-// AsyncRebuilt_4.12 (development/MODERNIZATION.md): the Iris FIFO holds entries
+// AsyncRebuilt_4.12: the Iris FIFO holds entries
 // by value in fixed segments; a consumer claims an entry by compare-and-swap on
 // the entry's own state and moves on when another consumer has it. The pool
 // distributes work through that queue with no mutex.

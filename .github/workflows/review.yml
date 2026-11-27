@@ -1,4 +1,4 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1): the Aptix governance review bot on
+# ReviewBot_1.5 (SafetyNet_1; development/PIPELINE.md, rules 9 and 10): the Aptix governance review bot on
 # every non-draft pull request, judging it against this repository's rubric
 # (.github/review/rubric.toml) and the rules it names. Two jobs, so the job holding the model key
 # cannot write to the pull request and the job that writes never sees the key:
@@ -6,8 +6,8 @@
 #      saves it as an artifact, and carries the pull request's review conversation in the Actions
 #      cache so each review adds to the one before it.
 #   2. Update PR from Agent: no key, pull-requests: write; ticks the "Agent review" boxes, posts
-#      one comment, checks that every new MODERNIZATION.md tick links its commit, and fails if a
-#      blocking item failed or step 1 did.
+#      one comment, checks that every work-item tick and requirement row the pull request names
+#      links its commit, and fails if a blocking item failed or step 1 did.
 # Both print the review to their log, each line starting `review_bot:`.
 #
 # Where the bot comes from. The bot lives in Aptix-Bio/governance, a private repository, and
@@ -15,8 +15,10 @@
 # only from private repositories": docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository,
 # read 2026-11-24), so this public repository cannot name it in `uses:`. Each job checks it out at
 # GOVERNANCE_COMMIT with GOVERNANCE_READ_TOKEN, a fine-grained token with Contents: read on
-# Aptix-Bio/governance alone, and runs its composite action from that path. The token is given to
-# that checkout step and nothing else, and governance stays private. The action reports the
+# Aptix-Bio/governance and on the private repository of the family's shared rules and plans
+# (reissued 2026-11-27), and runs its composite action from that path. The token goes to that
+# checkout step and, as `planning-token`, to the bot's action in both jobs, which fetches the
+# rules and plans read-only and masks it; no other step receives it, and governance stays private. The action reports the
 # commit it ran from as `github.action_ref`, which GitHub sets for an action named in `uses:` with
 # a ref; a local path has none, so BOT_REF is the pin itself.
 #
@@ -55,9 +57,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Aptix-Bio/governance at the merge of its PR 12 (untagged), the bot that keeps each pull
-  # request's reviews as one conversation in the Actions cache.
-  GOVERNANCE_COMMIT: eea566a60b93920050c30bfce901e250668186a1
+  # Aptix-Bio/governance at the merge of its PR 13 (59cfd33, untagged): the bot that reads the
+  # rubric's shared rules and items and this repository's privately kept plans from a read-only
+  # checkout its action makes with `planning-token`, and keeps each pull request's reviews as one
+  # conversation in the Actions cache.
+  GOVERNANCE_COMMIT: 59cfd336d368529ac2264ac316d8e93632e65b1c
 
 jobs:
   review:
@@ -90,6 +94,8 @@ jobs:
           persist-credentials: false
       - id: bot
         uses: ./governance/review-bot
+        with:
+          planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
       # The previous review's conversation, which this review adds to: the key is its SHA-256,
       # named by the state the bot sealed in its comment, and `review` checks the restored file.
       - id: previous
@@ -111,6 +117,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
           PYTHON: ${{ steps.bot.outputs.python }}
           SCRIPT: ${{ steps.bot.outputs.script }}
+          PLANNING: ${{ steps.bot.outputs.planning }}
           BOT_REF: ${{ env.GOVERNANCE_COMMIT }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -118,7 +125,7 @@ jobs:
           RULES_SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          "$PYTHON" "$SCRIPT" review --pr "$PR_NUMBER" --base-dir base --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA" \
+          "$PYTHON" "$SCRIPT" review --pr "$PR_NUMBER" --planning "$PLANNING" --base-dir base --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA" \
             --rubric-commit "$RULES_SHA" --bot-ref "$BOT_REF" --run-url "$RUN_URL" --out verdict.json --transcript transcript.json
           test -s verdict.json
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -169,6 +176,8 @@ jobs:
           persist-credentials: false
       - id: bot
         uses: ./governance/review-bot
+        with:
+          planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: needs.review.result == 'success'
         with:
@@ -177,10 +186,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PYTHON: ${{ steps.bot.outputs.python }}
           SCRIPT: ${{ steps.bot.outputs.script }}
+          PLANNING: ${{ steps.bot.outputs.planning }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: '"$PYTHON" "$SCRIPT" publish --pr "$PR_NUMBER" --head-sha "$HEAD_SHA" --rubric base/.github/review/rubric.toml --base-dir base --verdict verdict.json --run-url "$RUN_URL"'
+        run: '"$PYTHON" "$SCRIPT" publish --pr "$PR_NUMBER" --planning "$PLANNING" --head-sha "$HEAD_SHA" --rubric base/.github/review/rubric.toml --base-dir base --verdict verdict.json --run-url "$RUN_URL"'
 
   fork-skipped:
     name: Fork pull requests get no model review

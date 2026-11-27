@@ -1,6 +1,7 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1): the review bot's workflow keeps the
-# safety properties that make `pull_request_target` safe in a public repository, and the files the
-# bot reads from the default branch exist.
+# ReviewBot_1.5 (SafetyNet_1; development/PIPELINE.md, rules 9 and 10): the review bot's workflow
+# keeps the safety properties that make `pull_request_target` safe in a public repository, the
+# files the bot reads from the default branch exist, and the rubric names the privately kept files
+# by file name alone.
 #
 #   cmake -P cmake/check_review_configuration.cmake      (from the repository root)
 #
@@ -15,10 +16,13 @@
 #   - both review jobs run only for a pull request from a branch of this repository, and a
 #     fork's pull request gets a job that states why it is skipped;
 #   - GOVERNANCE_READ_TOKEN reaches only the step that checks out Aptix-Bio/governance at the
-#     pinned commit, and every other action is pinned by a full commit SHA;
-#   - pull request text reaches a `run:` script only through `env:`, and every job is bounded.
+#     pinned commit and, as `planning-token`, the bot's action, which checks out the private plans
+#     and conventions read-only;, and every other action is pinned by a full commit SHA;
+#   - pull request text reaches a `run:` script only through `env:`, and every job is bounded;
+#   - the rubric's shared items include Traceability, and every shared rule and plan file it names
+#     is a bare file name (PlansPrivate_7.4).
 # GitHub, "Securely using pull_request_target" and "Secure use reference" (docs.github.com,
-# read 2026-11-24) give the reasons; development/MODERNIZATION.md, ReviewBot_1.5, the sources.
+# read 2026-11-24) give the reasons.
 cmake_minimum_required(VERSION 3.20)
 
 if(NOT DEFINED REPOSITORY)
@@ -156,6 +160,7 @@ escaped(base_checkout [=[ref: ${{ github.sha }}]=])
 escaped(governance_ref [=[ref: ${{ env.GOVERNANCE_COMMIT }}]=])
 escaped(token_use [=[token: ${{ secrets.GOVERNANCE_READ_TOKEN }}]=])
 escaped(token_check [=[GOVERNANCE_READ_TOKEN: ${{ secrets.GOVERNANCE_READ_TOKEN != '' }}]=])
+escaped(planning_token [=[planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}]=])
 escaped(head_data [=[HEAD_SHA: ${{ github.event.pull_request.head.sha }}]=])
 set(fetches_code "(git (checkout|fetch|switch|clone|pull)|gh pr checkout|refs/pull/|github\\.head_ref)")
 string(REPLACE "\n      - " ";" steps "${jobs_text}")
@@ -227,8 +232,12 @@ foreach(step IN LISTS steps)
             problem("step '${first}': '${stripped}' uses the head beyond HEAD_SHA")
         endif()
         string(FIND "${line}" "secrets.GOVERNANCE_READ_TOKEN" at)
-        if(NOT at EQUAL -1 AND NOT stripped STREQUAL token_use AND NOT stripped STREQUAL token_check)
+        if(NOT at EQUAL -1 AND NOT stripped STREQUAL token_use AND NOT stripped STREQUAL token_check
+           AND NOT stripped STREQUAL planning_token)
             problem("step '${first}': '${stripped}' passes GOVERNANCE_READ_TOKEN beyond the governance checkout")
+        endif()
+        if(stripped STREQUAL planning_token AND NOT step MATCHES "(^|\n) *uses: \\./governance/review-bot\n")
+            problem("step '${first}': planning-token is given to a step that is not the bot's action")
         endif()
         if(stripped STREQUAL token_use AND NOT step MATCHES "\n *repository: Aptix-Bio/governance\n")
             problem("step '${first}': the governance token is given to a step that is not the governance checkout")
@@ -253,19 +262,24 @@ endif()
 
 # --- what the bot reads from the default branch ---------------------------------------------
 file(READ "${REPOSITORY}/.github/review/rubric.toml" rubric)
-string(FIND "${rubric}" "reference_files = [" begin)
-set(references "")
-if(NOT begin EQUAL -1)
-    string(SUBSTRING "${rubric}" ${begin} -1 rest)
-    string(FIND "${rest}" "]" end)
-    string(SUBSTRING "${rest}" 0 ${end} rest)
-    string(REGEX MATCHALL "\"[^\"]+\"" references "${rest}")
-endif()
+# The quoted entries of the array `key = [ ... ]`, which starts a line; empty when the key is absent.
+function(rubric_list out key)
+    set(entries "")
+    string(FIND "${rubric}" "\n${key} = [" begin)
+    if(NOT begin EQUAL -1)
+        string(SUBSTRING "${rubric}" ${begin} -1 rest)
+        string(FIND "${rest}" "]" end)
+        string(SUBSTRING "${rest}" 0 ${end} rest)
+        string(REGEX MATCHALL "\"[^\"]+\"" entries "${rest}")
+        string(REPLACE "\"" "" entries "${entries}")
+    endif()
+    set(${out} "${entries}" PARENT_SCOPE)
+endfunction()
+rubric_list(references reference_files)
 if(NOT references)
     problem("the rubric names no reference_files")
 endif()
 foreach(reference IN LISTS references)
-    string(REPLACE "\"" "" reference "${reference}")
     if(NOT EXISTS "${REPOSITORY}/${reference}")
         problem("the rubric's reference file ${reference} is missing; the bot fails every review by name")
     endif()
@@ -273,6 +287,26 @@ endforeach()
 if(NOT rubric MATCHES "\n\\[trace\\]\n(#[^\n]*\n)*item = \"Traceability\"\n")
     problem("the rubric's [trace] table does not name the Traceability item")
 endif()
+# PlansPrivate_7.4 (decided 2026-11-27): the family's shared rules and items, and this
+# repository's work breakdown, requirement rows and errata, are kept privately and read by the bot
+# from its own checkout. The rubric names them by file name alone, so that this public file holds
+# no path into the private checkout, and the shared items carry the Traceability item the
+# [trace] table names.
+rubric_list(shared_items shared_items)
+if(NOT "Traceability" IN_LIST shared_items)
+    problem("the rubric's shared_items do not include Traceability, the item [trace] names")
+endif()
+foreach(key shared_reference_files plan_reference_files plan_excerpt_files plan_ticks plan_rows)
+    rubric_list(names ${key})
+    if(NOT names)
+        problem("the rubric names no ${key}")
+    endif()
+    foreach(name IN LISTS names)
+        if(name MATCHES "[/\\\\]")
+            problem("the rubric's ${key} entry ${name} is a path; a privately kept file is named by its file name alone")
+        endif()
+    endforeach()
+endforeach()
 file(STRINGS "${REPOSITORY}/.github/CODEOWNERS" owners REGEX "^[^#]")
 set(catch_all "")
 foreach(line IN LISTS owners)
@@ -299,4 +333,4 @@ endforeach()
 if(problems GREATER 0)
     message(FATAL_ERROR "${problems} review configuration problem(s); see above")
 endif()
-message(STATUS "review configuration: pull_request_target with base-only checkouts, least privilege, forks skipped, token confined, SHA pins")
+message(STATUS "review configuration: pull_request_target with base-only checkouts, least privilege, forks skipped, token confined, SHA pins, private files named by file name")

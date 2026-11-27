@@ -89,7 +89,7 @@ IRIS_EXPORT Result viewer_display_refreshed         (const Viewer& viewer) noexc
  * @brief Post one message from the interface to the viewer's engine.
  *
  * The one entry for the interface's messages (the funnel): the bytes are one
- * Envelope of Iris-Core's bridge schema, built by the interface and passed
+ * Envelope of the viewer's bridge schema, built by the interface and passed
  * through unread by the host. The engine verifies every field and range on the
  * calling thread, failing with the field it rejects, then queues the message
  * for its engine thread, which applies it at its next frame. Any thread; the
@@ -117,7 +117,7 @@ IRIS_EXPORT Result viewer_route_pointer             (const ViewerRoutePointerInf
 /**
  * @brief Take the engine's next message for the interface, if one waits.
  *
- * The funnel's other direction: the engine queues one Batch of Iris-Core's
+ * The funnel's other direction: the engine queues one Batch of the viewer's
  * bridge schema at a time for its interface, and the host takes each into its
  * storage and hands the bytes to the interface unread. Call it from the host's
  * own thread after each display refresh, until it reports none; it never

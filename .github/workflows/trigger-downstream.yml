@@ -33,7 +33,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      # ReviewBot_1.5 (development/ERRATA.md, 2026-11-24): the App's client ID and key were never
+      # ReviewBot_1.5 (development/PIPELINE.md, rule 8): the App's client ID and key were never
       # set, and every merge failed inside the token action with a message naming its input
       # instead of the setting. This step names each missing setting first; it sees only whether
       # each is set.
