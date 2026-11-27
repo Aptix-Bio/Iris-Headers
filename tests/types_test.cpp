@@ -522,7 +522,8 @@ TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's decided
     CHECK(desc.quality == IrisSlide::QUALITY_DEFAULT);
     CHECK(desc.subsampling == IrisSlide::SUBSAMPLE_422);
     CHECK(desc.memory_budget == 0);
-    CHECK(desc.layer_step == 2);
+    STATIC_CHECK(IrisSlide::LAYER_STEP_DEFAULT == 2);
+    CHECK(desc.layer_step == IrisSlide::LAYER_STEP_DEFAULT);
     CHECK(desc.concurrency >= 1);
     const IrisSlide::EncoderProgress progress;
     CHECK(progress.state == IrisSlide::EncoderState::READY);

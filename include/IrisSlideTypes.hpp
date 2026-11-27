@@ -305,6 +305,9 @@ enum IRIS_EXPORT Subsampling : uint8_t {
     SUBSAMPLE_DEFAULT                       = SUBSAMPLE_422,
 };
 
+/// The scale between an encode's written layers when the caller names none (decided 2026-11-27).
+constexpr std::uint32_t LAYER_STEP_DEFAULT  = 2;
+
 /// What to encode, where and how (EncoderSurface_24.1, decided 2026-11-27): the rebuilt encoder reads
 /// the slide at `source`, derives every lower layer by a 2x bicubic reduction, and writes
 /// <source stem>.<encoding>.iris into `destination`. Made into an Encoder by create_encoder.
@@ -315,10 +318,10 @@ struct IRIS_EXPORT EncoderDesc {
     Quality         quality       = QUALITY_DEFAULT;      ///< JPEG quality, 1-100
     Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< JPEG chroma subsampling
     std::uint64_t   memory_budget = 0;                    ///< bytes held at once; 0 is a quarter of physical memory
-    std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads
+    std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads, at least 1
     /// The scale between written layers: 2, 4, 8 … Layers are derived 2x at a time and every
     /// log2(layer_step)-th is written, down to one that fits one tile.
-    std::uint32_t   layer_step    = 2;
+    std::uint32_t   layer_step    = LAYER_STEP_DEFAULT;
     /// The slide's attribute pairs as the caller states them: key text, value text, their format
     /// and that format's version, written as the slide's one attributes block. The encoder checks
     /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes) and refuses a format
