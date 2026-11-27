@@ -103,7 +103,11 @@ the top-level project, so the first build above runs it too.
     test the tag `[<ID>]`.
 17. **One open pull request at a time.** Its branch is `<kind>/<WorkPackage>_<n>`, named before
     the first push, since renaming a pull request's head branch closes the pull request; further
-    work goes onto that branch while it is open.
+    work goes onto that branch while it is open. One exception (decided 2026-11-27): a pull request that only
+    moves the review bot's pin (`GOVERNANCE_COMMIT` and its comment in `review.yml`) opens beside
+    the open one and merges first, because a review runs `main`'s workflow, so the open pull
+    request is judged by the new bot only once the pin is on `main`; no other branch changes those
+    lines, so it conflicts with none.
 18. **The description follows `.github/pull_request_template.md`.** It names the work items and
     requirement rows the change advances; their ticks, each linking the commit that did the
     work, are kept privately with the work breakdown, and the review bot checks every link. The
