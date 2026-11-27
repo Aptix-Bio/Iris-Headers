@@ -8,6 +8,9 @@
 
 #ifndef IrisSlideCore_h
 #define IrisSlideCore_h
+#include <filesystem>
+#include <string>
+
 #include "IrisSlideTypes.hpp"
 
 namespace   IrisSlide {

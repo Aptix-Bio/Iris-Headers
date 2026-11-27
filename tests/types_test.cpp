@@ -506,25 +506,23 @@ TEST_CASE("Encoding matches IFE's tile_encodings value for value: AV1 holds 3, a
     STATIC_CHECK(IrisSlide::IMAGE_ENCODING_AVIF == 3);
 }
 
-TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's decided defaults", "[Metadata][Encoder]") {
-    // EncoderSurface_24.1 (decided 2026-11-27): the rebuilt encoder is made from an EncoderDesc by
+TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's named defaults", "[Format_07]") {
+    // EncoderSurface_5.6 (decided 2026-11-27): Iris-Slide's encoder is made from an EncoderDesc by
     // create_encoder(const EncoderDesc&, Encoder&). Its attribute pairs are the caller's, with
     // their format and version, as a slide's Metadata reads them back (EncodeSlideInfoAttributes_5.5,
-    // decided 2026-11-25), empty by default; JPEG at quality 90 and 4:2:2, a budget of 0 for a
-    // quarter of physical memory, and a layer step of 2 are the defaults decided 2026-11-27.
+    // decided 2026-11-25), empty by default; every other default is a named constant, so the
+    // decision is stated once, where the constant is defined.
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::EncoderDesc::attributes), IrisSlide::Attributes>);
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::EncoderDesc::source), std::filesystem::path>);
     const IrisSlide::EncoderDesc desc;
     CHECK(desc.attributes.empty());
     CHECK(desc.attributes.type == IrisSlide::METADATA_UNDEFINED);
-    CHECK(desc.attributes.version == 0);
     CHECK(desc.encoding == IrisSlide::TILE_ENCODING_JPEG);
     CHECK(desc.quality == IrisSlide::QUALITY_DEFAULT);
-    CHECK(desc.subsampling == IrisSlide::SUBSAMPLE_422);
-    CHECK(desc.memory_budget == 0);
-    STATIC_CHECK(IrisSlide::LAYER_STEP_DEFAULT == 2);
+    CHECK(desc.subsampling == IrisSlide::SUBSAMPLE_DEFAULT);
+    CHECK(desc.memory_budget == IrisSlide::MEMORY_BUDGET_DEFAULT);
     CHECK(desc.layer_step == IrisSlide::LAYER_STEP_DEFAULT);
-    CHECK(desc.concurrency >= 1);
+    CHECK(desc.concurrency >= 1);   // at least one worker, whatever the machine reports
     const IrisSlide::EncoderProgress progress;
     CHECK(progress.state == IrisSlide::EncoderState::READY);
 }

@@ -99,11 +99,10 @@ using       Slide           = std::shared_ptr<class Slide_t>;
 using       Cache           = std::shared_ptr<class Cache_t>;
 
 /**
- * @brief Encodes a single whole slide image from another WSI format or Cache at a time
- * using the maximal CPU cores. 
- * 
- * The encoder reads a slide and writes it as an Iris file (IFE): made by create_encoder from an
- * EncoderDesc, dispatched once, followed with encoder_progress.
+ * @brief Encodes one whole-slide image, a DICOM whole-slide instance, as an Iris file (IFE),
+ * on the worker threads its EncoderDesc names.
+ *
+ * Made by create_encoder from an EncoderDesc, dispatched once, followed with encoder_progress.
  */
 using       Encoder         = std::shared_ptr<class Encoder_t>;
 
@@ -305,10 +304,15 @@ enum IRIS_EXPORT Subsampling : uint8_t {
     SUBSAMPLE_DEFAULT                       = SUBSAMPLE_422,
 };
 
+// RTM Format_07
 /// The scale between an encode's written layers when the caller names none (decided 2026-11-27).
 constexpr std::uint32_t LAYER_STEP_DEFAULT  = 2;
+/// The memory budget that asks the encoder for its own default, a quarter of the machine's
+/// physical memory (decided 2026-11-27): the encoder reads the machine, so the header names no size.
+constexpr std::uint64_t MEMORY_BUDGET_DEFAULT = 0;
 
-/// What to encode, where and how (EncoderSurface_24.1, decided 2026-11-27): the rebuilt encoder reads
+// RTM Format_07
+/// What to encode, where and how (EncoderSurface_5.6, decided 2026-11-27): the encoder reads
 /// the slide at `source`, derives every lower layer by a 2x bicubic reduction, and writes
 /// <source stem>.<encoding>.iris into `destination`. Made into an Encoder by create_encoder.
 struct IRIS_EXPORT EncoderDesc {
@@ -317,21 +321,23 @@ struct IRIS_EXPORT EncoderDesc {
     Encoding        encoding      = TILE_ENCODING_JPEG;   ///< the IFE tile encoding written
     Quality         quality       = QUALITY_DEFAULT;      ///< JPEG quality, 1-100
     Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< JPEG chroma subsampling
-    std::uint64_t   memory_budget = 0;                    ///< bytes held at once; 0 is a quarter of physical memory
+    std::uint64_t   memory_budget = MEMORY_BUDGET_DEFAULT;   ///< bytes held at once; MEMORY_BUDGET_DEFAULT is a quarter of physical memory
     std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads, at least 1
     /// The scale between written layers: 2, 4, 8 … Layers are derived 2x at a time and every
     /// log2(layer_step)-th is written, down to one that fits one tile.
     std::uint32_t   layer_step    = LAYER_STEP_DEFAULT;
     /// The slide's attribute pairs as the caller states them: key text, value text, their format
     /// and that format's version, written as the slide's one attributes block. The encoder checks
-    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes) and refuses a format
-    /// other than METADATA_I2S or version 0; whether a key belongs to I2S is I2S's check. Nothing
-    /// is read from the source's own attributes.
+    /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes). Empty attributes
+    /// (the default, METADATA_UNDEFINED) write no attributes block; pairs given must be METADATA_I2S
+    /// at a version above 0, and other pairs are refused naming them. Whether a key belongs to I2S
+    /// is I2S's check. Nothing is read from the source's own attributes.
     Attributes      attributes;
 };
 
+// RTM Format_07
 /// An encoder is used once: dispatched from READY, it ends DONE, FAILED or INTERRUPTED.
-enum class IRIS_EXPORT EncoderState : std::uint8_t {
+enum class EncoderState : std::uint8_t {
     READY,
     ACTIVE,
     DONE,

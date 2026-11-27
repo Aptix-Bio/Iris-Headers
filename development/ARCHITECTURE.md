@@ -75,13 +75,21 @@ Who includes what, today:
 | Header | IFE | Iris-Slide | A proprietary consumer (planned) |
 |---|---|---|---|
 | `IrisTypes.hpp` (`Result`, `Buffer` handle, extents, annotations, formats) | yes | yes | yes |
-| `IrisSlideTypes.hpp` (slide metadata, encodings, images; codec handles; the encoder's `EncoderDesc` and `EncoderProgress`) | yes | yes | for its CPU decode path |
-| `IrisSlideCore.hpp` (Iris-Slide's API, the encoder's included) | — | yes | for its CPU decode path |
+| `IrisCodecTypes.hpp` (slide metadata, encodings, images; codec handles) | yes | yes | for its CPU decode path |
+| `IrisCodecCore.hpp` (codec API) | — | yes | for its CPU decode path |
 | `IrisCore.hpp` (IrisV2 viewer API, Buffer functions) | — | yes (Buffer functions) | — |
 | `priv/IrisBuffer.hpp`, `IrisQueue.hpp`, `IrisAsync.hpp` | — | yes | yes |
 | `priv/IrisMemory.hpp` | yes | — | — |
 | `priv/IrisSIMD.hpp` | — | yes | — |
 | `priv/IrisCoreVulkan.hpp`, `IrisCorePython.hpp` | — | `IrisCoreVulkan.hpp` | — |
+
+*Amended 2026-11-27 (EncoderSurface_5.6):* the table above keeps the names it was read with.
+`IrisCodecTypes.hpp` and `IrisCodecCore.hpp` are now `IrisSlideTypes.hpp` and `IrisSlideCore.hpp`
+(the rename, X4); `IrisSlideTypes.hpp` carries the encoder's `EncoderDesc`, `EncoderState` and
+`EncoderProgress`, and `IrisSlideCore.hpp` its five calls (`create_encoder`, `dispatch_encoder`,
+`encoder_progress`, `interrupt_encoder`, `encoder_output_name`), which replace
+`EncodeSlideInfo`, `EncodeStreamInfo`, `EncoderStatus`, `EncoderDerivation` and the earlier
+encoder calls. IFE includes `IrisSlideTypes.hpp` and uses none of the encoder's types.
 
 ## 3. Target
 
