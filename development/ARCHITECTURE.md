@@ -1,7 +1,8 @@
 # ARCHITECTURE.md — Iris-Headers: the shared vocabulary of the Iris family
 
 **Status:** decisions answered 2026-11-12 (§4); the plan is ready to build. ArenaClaimQuestion_9
-decided 2026-11-26; Questions 10–13 open. Its two diagrams render with mermaid-cli 12.2.0
+decided 2026-11-26; ContributingPipelineQuestion_10 and LocalRulesQuestion_11 decided
+2026-11-27; Questions 12 and 13 open. Its two diagrams render with mermaid-cli 12.2.0
 (2026-11-12; rechecked 2026-11-26). **Owner:** the maintainer.
 
 Decided 2026-11-12: any change Iris-Headers needs is allowed, because the
@@ -18,10 +19,12 @@ file names and identifiers they were written with (`IrisCodecCore.hpp`,
 `IrisCodecTypes.hpp`, `IrisCodec::`, `IRIS_CODEC`); their prose names the library Iris-Slide.
 
 This document is the design contract: the purpose, what the repository held when the plan was
-written, the target, and the decisions and open questions. The work that carries it out is in
-[WBS.md](WBS.md), the requirements it implies in [RTM.md](RTM.md), and the mistakes and their
-guards in [ERRATA.md](ERRATA.md). Moved here on 2026-11-26 from the repository's single plan file
-(DevelopmentLayout_7); git history keeps that file.
+written, the target, and the decisions and open questions. The work that carries it out, the
+requirements it implies and the record of mistakes and their guards are kept privately by the
+maintainers (decided 2026-11-27, LocalRulesQuestion_11); their IDs appear here, in the code and in
+pull requests. The rules a pull request is held to are [CONTRIBUTING.md](../CONTRIBUTING.md), and
+the pipeline's are [PIPELINE.md](PIPELINE.md). Moved here on 2026-11-26 from the repository's
+single plan file (DevelopmentLayout_7); git history keeps that file.
 
 ---
 
@@ -181,7 +184,8 @@ classDiagram
 ## 4. Decisions and questions
 
 Each question has a proposal and its dated answer; the last column names the work that carries
-it out ([WBS.md](WBS.md)). An answer changes only by a dated amendment in its row.
+it out (an item of the work breakdown, kept privately). An answer changes only by a dated
+amendment in its row.
 
 | Q | Question | Proposal | WBS |
 |---|---|---|---|
@@ -194,12 +198,12 @@ it out ([WBS.md](WBS.md)). An answer changes only by a dated amendment in its ro
 | TileEncodingAv1Question_7 | What does tile encoding value 3 hold, AVIF or AV1? | **Decided 2026-11-25: AV1.** `TILE_ENCODING_AVIF = 3` becomes `TILE_ENCODING_AV1 = 3`: a bare AV1 sequence in the Low Overhead Bitstream Format of the [AV1 bitstream specification](https://aomediacodec.github.io/av1-spec/) (read 2026-11-25), one shown frame per focal plane, a single-plane tile one key frame, with no container. `CACHE_ENCODING_AVIF` follows as `CACHE_ENCODING_AV1`, since a cache entry holds a tile in a tile encoding. No .iris file in use carries AVIF tiles, so the value is reassigned without an alias. `IMAGE_ENCODING_AVIF` (associated images) and the libavif pin stay. IFE makes the matching spec change | TileEncodingAv1_5.4.1 |
 | TileEncodingBlocksQuestion_8 | Which values hold the GPU block-compressed tile encodings, and does the cache mirror them? | **Decided 2026-11-25: `TILE_ENCODING_UASTC = 4` and `TILE_ENCODING_XUASTC = 5`**, after AV1, matching IFE's `tile_encodings` 1.1. Each tile byte-stream is bare: under UASTC one Zstandard frame of the tile's 16-byte UASTC LDR 4x4 blocks in raster order ([UASTC LDR 4x4 specification](https://github.com/BinomialLLC/basis_universal/wiki/UASTC-LDR-4x4-Texture-Specification), [RFC 8878](https://www.rfc-editor.org/rfc/rfc8878)); under XUASTC one XUASTC LDR bitstream ([XUASTC LDR specification v1.0](https://github.com/BinomialLLC/basis_universal/wiki/XUASTC-LDR-Specification-v1.0), marked preliminary by its authors); one plane and one mip level each, all read 2026-11-25. **The cache does not mirror them:** `CACHE_ENCODING_LZ` and `CACHE_ENCODING_NO_COMPRESSION` already hold 4 and 5, and mirroring would renumber both; whether the cache needs block-compressed members is Iris-Slide's. IFE owns the open items: where a stream records its mip levels, XUASTC's footprint and its bitstream's stability | TileEncodingBlocks_5.4.2 |
 | ArenaClaimQuestion_9 | Do the arena's write head and its claim of a slice return to Iris-Headers? | **Decided 2026-11-26: yes, beside `Iris::Memory`** (`priv/IrisMemory.hpp`), complete enough that no Iris repository reads FastFHIR for it: the write head, the compare-and-swap claim of a slice (load, bounds check, compare-and-swap, commit) and its commit, ported from FastFHIR's arena (`Memory_t::claim_space`), which `MemoryArena` was extracted from without them (`src/IrisMemory.cpp:12`). The stream head (`Memory::StreamHead`, for streams of unknown length) is ported too. Its readers: a slide reader that reserves a range reply's known length before sending the request, so every request in flight writes into its own slice and no writer waits; and IFE's Builder, which claims through it in place of its own bump (`Builder_t::claim`). One change in the port: FastFHIR's `claim_space` parks every other claimer on the stream's lock bit (`head.wait`, FastFHIR `src/FF_memory.cpp:413-444`), which the style guide's rule that nothing on a hot path waits forbids, so a claim made while a stream holds the head fails at once with a named result and the claimer moves on; that change is confirmed at ArenaClaim_8's VERIFY | ArenaClaim_8 |
+| ContributingPipelineQuestion_10 | Does Iris-Headers gain a `CONTRIBUTING.md` and a `development/PIPELINE.md`? | Its pipeline facts (the workflows, the `cmake -P` scripts, the settings `trigger-downstream` needs, the review workflow's safety properties) were spread over the comments of `.github/workflows/` and `cmake/` and the work breakdown. Proposed: write both in one later package, `PIPELINE.md` as numbered rules taken from those comments, `CONTRIBUTING.md` as this repository's own rules. **Decided 2026-11-27: both, written in DevelopmentLayout_7**, so that a contributor reads this repository's own rules in it while the family's general conventions are kept privately: [CONTRIBUTING.md](../CONTRIBUTING.md) holds the rules a pull request is held to, numbered, as facts of this codebase, and [PIPELINE.md](PIPELINE.md) the pipeline's numbered rules | PlansPrivate_7.4 |
+| LocalRulesQuestion_11 | Do `development/style_guide.md` and `development/ci_runners.md` stay in this repository? | The review bot read only files of this repository (`.github/review/rubric.toml`, `reference_files`), and these two were its copy of the family's rules, adopted 2026-11-24. **Decided 2026-11-27: both leave this repository**, so that a public repository carries no copy of the family's internal development rules; they are removed in the pull request that moves the review bot's pin to a bot that loads the shared rules from its own private checkout, and they stay until then because the rubric's `reference_files` names them and the bot fails a review when one is missing. *Amended 2026-11-27:* they are removed in DevelopmentLayout_7, and the work breakdown, the requirement rows and the errata leave with them, kept privately with the family's conventions; the rubric names the shared rules and those three files by file name alone (`shared_reference_files`, `plan_reference_files`, `plan_excerpt_files`), and the bot's pin moves to the bot that reads them in the same pull request | PlansPrivate_7.4 |
 
 ### Open questions
 
 | Q | Question | Facts | Proposal | WBS |
 |---|---|---|---|---|
-| ContributingPipelineQuestion_10 | Does Iris-Headers gain a `CONTRIBUTING.md` and a `development/PIPELINE.md`? | The family keeps its general conventions privately, and a repository's own rules go in these two files ([README.md](README.md)); Iris-Headers has neither today. Its pipeline facts (the workflows, the `cmake -P` scripts, the settings `trigger-downstream` needs, the review workflow's safety properties) are spread over [ci_runners.md](ci_runners.md), [WBS.md](WBS.md) (SafetyNet_1) and the comments of `.github/workflows/` and `cmake/` | Write both in one later package: `PIPELINE.md` as numbered rules taken from those comments, `CONTRIBUTING.md` as this repository's own rules | — |
-| LocalRulesQuestion_11 | Do `development/style_guide.md` and `development/ci_runners.md` stay in this repository? | The family keeps its general style and CI-runner rules privately; the review bot reads only files of this repository (`.github/review/rubric.toml`, `reference_files`), and these two are its copy of the rules, adopted 2026-11-24 | Decided 2026-11-27: both leave this repository, so that a public repository carries no copy of the family's internal development rules; they are removed in the pull request that moves the review bot's pin to a bot that loads the shared rules from its own private checkout, and they stay until then because the rubric's `reference_files` names them and the bot fails a review when one is missing | — |
 | ArenaClaimAlignmentQuestion_12 | Does the claim take an alignment? | A slide reader's storage policies align a reply's slice (4 KiB pages; whole sectors for Windows unbuffered reads); FastFHIR's `claim_space(bytes)` and IFE's `Builder_t::claim(bytes)` take a size only | Not proposed here; settled before WriteHeadClaim_8.1's red step | ArenaClaim_8 |
 | ArenaHeadPlacementQuestion_13 | Where does the write head live? | FastFHIR keeps it inside the mapping (`m_head_ptr`, the arena's first bytes, so a file-backed arena carries its own head); IFE's Builder keeps it as a member atomic beside its `Iris::Memory`; `Iris::Memory` reserves no header bytes today | Not proposed here; settled before WriteHeadClaim_8.1's red step | ArenaClaim_8 |

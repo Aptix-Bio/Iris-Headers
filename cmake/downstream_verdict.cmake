@@ -1,4 +1,4 @@
-# DownstreamBuild_1.2 (development/WBS.md, SafetyNet_1): one consumer cell of
+# DownstreamBuild_1.2 (SafetyNet_1; development/PIPELINE.md, rule 3): one consumer cell of
 # downstream.yml. A header change is correct only relative to what consumes it, so this builds the
 # consumer against the change, and against the base when that fails (the control run):
 #   change green                                  -> pass
@@ -11,7 +11,7 @@
 #
 # A breaking change is made in each repository on a branch of the same name (the paired branch),
 # so the consumer is built from its branch named like the pull request's head when it has one,
-# else from main. ReviewBot_1.5 (development/ERRATA.md, 2026-11-24): a pull request that is green
+# else from main. ReviewBot_1.5 (every consumer cell red on main, 2026-11-24): a pull request that is green
 # only on a paired branch breaks the consumer's main the moment it merges, so when a paired branch
 # was used and the change is green on it, the consumer's main is built against the change as well:
 #   main green                             -> pass

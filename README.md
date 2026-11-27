@@ -34,11 +34,13 @@ target_link_libraries (
 ## Pull request review
 
 Every pull request from a branch of this repository is reviewed by the Aptix governance review
-bot against this repository's rules: `.github/review/rubric.toml` names the items and the files
-they are judged against (`development/style_guide.md`, `development/ci_runners.md`,
-`development/ARCHITECTURE.md`, `development/README.md`, `development/RTM.md`,
-`development/ERRATA.md`, and the items of `development/WBS.md` a pull request names), read from
-the default branch so a pull request cannot change the rules it is judged by. The bot ticks the
+bot against this repository's rules: `.github/review/rubric.toml` names the items and this
+repository's documents they are judged against (`CONTRIBUTING.md`, `development/ARCHITECTURE.md`,
+`development/PIPELINE.md` and `development/README.md`), read from the default branch so a pull
+request cannot change the rules it is judged by. The family's general conventions and this
+repository's work breakdown are kept privately by the maintainers; the bot reads them from its own
+checkout, and its findings name the rule they apply. CONTRIBUTING.md lists the rules a pull
+request is held to. The bot ticks the
 "Agent review" boxes of the pull request template and posts one comment; a failed blocking item
 fails the `code-review` check. A maintainer gives the final verification.
 

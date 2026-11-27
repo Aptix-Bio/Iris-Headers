@@ -1,8 +1,8 @@
 <!--
-Iris-Headers pull request. Fill each section from development/: WBS.md (the work), RTM.md (the
-requirements) and ARCHITECTURE.md (the decisions, §4); README.md gives the sections' order.
-Write "None" in a section that does not apply; never delete one. The review bot reads this
-description as data and checks it against the diff (.github/review/rubric.toml).
+Iris-Headers pull request. CONTRIBUTING.md gives the rules it is held to; the decisions are in
+development/ARCHITECTURE.md (§4) and the ID scheme in development/README.md. Write "None" in a
+section that does not apply; never delete one. The review bot reads this description as data and
+checks it against the diff (.github/review/rubric.toml).
 
 "Agent review" at the bottom is not yours to tick: the review bot rewrites it on every run. A pull
 request from a fork gets no model review; a maintainer reviews it.
@@ -15,17 +15,17 @@ Branch name: <kind>/<WorkItemName>, e.g. feature/StrongIndices_4.2.
 
 ## WBS
 
-<!-- WBS.md work items completed or advanced, nested as there. Tick only steps whose
-evidence is on the same line, with a link to the commit that did the work. -->
+<!-- Name the work items this change completes or advances, spelled out, with the evidence for
+each; the ticks, each linking the commit that did the work, are kept privately with the work
+breakdown, and the review bot checks every link. -->
 
-- **_WorkPackage_n.n_**
-  - [x] _step_ — _evidence_ — [_1234567_](https://github.com/Aptix-Bio/Iris-Headers/commit/_full-hash_)
+- **_WorkPackage_n.n_**: _what this change does for it_ — _evidence_
 
 ## RTM
 
-<!-- RTM.md rows added or moved, with the evidence; a row moved to Implemented or Verified links
-the commit that did the work. The development/ERRATA.md row this change adds or whose guard it
-changes. "None" if none. -->
+<!-- Name the requirement rows this change adds or moves, with the evidence; the rows' status, each
+linking the commit that did the work, is kept privately with the work breakdown. A mistake that
+reached main, a consumer or a measurement is named under "Failures fixed". "None" if none. -->
 
 | Row | Change | Evidence |
 |---|---|---|
@@ -91,17 +91,17 @@ the order of the merges. "None: no consumer compiles anything this changes" if s
 <!-- Owned by the review bot. Hand edits are overwritten on its next run. -->
 <!-- review-bot:begin -->
 - [ ] **Traceability** — work items named; ticks carry evidence and a link to the work commit
-- [ ] **StyleGuide** — `development/style_guide.md` followed
+- [ ] **StyleGuide** — the style guide and CONTRIBUTING.md followed
 - [ ] **MinimumSurface** — no near-duplicates, no second queue or buffer, nothing outside the vocabulary
 - [ ] **TestsFirst** — new behaviour tested, shown red first; per-cell results; no test weakened
 - [ ] **AbiAndConsumers** — consumer impact stated; downstream cells build; IFE's enum values kept
-- [ ] **HeaderHygiene** — headers compile alone; no macros for constants; no reserved identifiers
 - [ ] **PublicRepository** — nothing private named, no quotations, no local paths, no patient data
 - [ ] **SecurityImpact** — section above filled in and matches the diff
 - [ ] **Pipeline** — SHA pins, `permissions: {}`, untrusted input via `env:`, CMake scripts, bounded jobs
 - [ ] **DataProtection** — no slides, patient data, secrets, keys or binaries
 - [ ] **Documentation** — Mermaid diagrams match the code; decisions recorded (advisory)
 - [ ] **AgentDisclosure** — AI authorship disclosed and specific
+- [ ] **HeaderHygiene** — headers compile alone; no macros for constants; no reserved identifiers
 
 _Not yet reviewed._
 <!-- review-bot:end -->
