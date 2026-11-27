@@ -179,7 +179,7 @@ names exists).
 
 ## ArenaClaim_8 — one claim of an arena's slice for every Iris repository `todo`
 
-Purpose: the arena's write head and its single-instruction claim of a slice return beside
+Purpose: the arena's write head and its compare-and-swap claim of a slice return beside
 `Iris::Memory` (`priv/IrisMemory.hpp`), ported from the FastFHIR arena it was extracted from and
 complete enough that no Iris repository reads FastFHIR for it (ArenaClaimQuestion_9, decided
 2026-11-26). Two readers need it: a slide reader that reserves a range reply's known length

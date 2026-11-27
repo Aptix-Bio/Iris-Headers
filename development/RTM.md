@@ -53,7 +53,7 @@ flowchart LR
 | Goal_16 | 2026-11-25: tile encodings 4 and 5 are the bare GPU block-compressed UASTC and XUASTC streams; the cache does not mirror them (TileEncodingBlocksQuestion_8) |
 | Goal_17 | 2026-11-25: the encoder takes a slide's attributes from its caller, as the existing `Attributes` type, and Iris-Headers names no I2S key |
 | Goal_18 | 2026-11-26: Iris-Headers' planning documents take the family's `development/` layout (ARCHITECTURE, WBS, RTM, README, ERRATA), replacing the single plan file |
-| Goal_19 | 2026-11-26: the arena's write head and its single-instruction claim of a slice return beside `Iris::Memory`, complete enough that no Iris repository reads FastFHIR for it, and a claim never waits (ArenaClaimQuestion_9) |
+| Goal_19 | 2026-11-26: the arena's write head and its compare-and-swap claim of a slice return beside `Iris::Memory`, complete enough that no Iris repository reads FastFHIR for it, and a claim never waits (ArenaClaimQuestion_9) |
 | Goal_20 | 2026-11-12: IFE 1.1's parked format facts (focal planes, microns per plane, the clinical metadata range, the new tile encodings) land in the shared types |
 
 ## Requirements

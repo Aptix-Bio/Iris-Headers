@@ -6,12 +6,11 @@ what stays, and the decisions that follow. This folder breaks that contract down
 packages, items and requirements. The documentation a consumer reads is the repository's
 `README.md` and the headers' own doc comments.
 
-> The maintainers' general conventions for code, planning and CI are kept in their private
-> planning repository, Iris-Planning. This repository's own rules are in CONTRIBUTING.md and
-> development/PIPELINE.md; the review bot's findings name the rule they apply.
-
-Iris-Headers does not have those two files yet (ContributingPipelineQuestion_10); until it does,
-its rules are [style_guide.md](style_guide.md) and [ci_runners.md](ci_runners.md).
+The maintainers keep the family's general conventions for code, planning and CI privately; the
+review bot's findings name the rule they apply. This repository's own rules belong in a
+CONTRIBUTING.md and a development/PIPELINE.md, which it does not have yet
+(ContributingPipelineQuestion_10); until it does, they are [style_guide.md](style_guide.md) and
+[ci_runners.md](ci_runners.md) (LocalRulesQuestion_11).
 
 | File | Use it to… |
 |---|---|
