@@ -73,6 +73,7 @@ IRIS_EXPORT Result cache_store_entry        (const CacheStoreInfo&) noexcept;
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 //      Slide Encoder                                                       //
 //  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+// RTM Format_07
 /// An encoder for desc.source, written through @p encoder. Refuses, naming the value: a source no
 /// source kind reads, an encoding the encoder does not write, a quality outside 1-100, a destination
 /// that is not a folder, a layer step that is not a power of two from 2, a memory budget below the

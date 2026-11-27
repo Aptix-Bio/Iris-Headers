@@ -345,6 +345,7 @@ enum class EncoderState : std::uint8_t {
     INTERRUPTED,
 };
 
+// RTM Format_07
 /// A snapshot of an encode (encoder_progress).
 struct IRIS_EXPORT EncoderProgress {
     EncoderState          state               = EncoderState::READY;

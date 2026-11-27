@@ -510,13 +510,18 @@ TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's named d
     // EncoderSurface_5.6 (decided 2026-11-27): Iris-Slide's encoder is made from an EncoderDesc by
     // create_encoder(const EncoderDesc&, Encoder&). Its attribute pairs are the caller's, with
     // their format and version, as a slide's Metadata reads them back (EncodeSlideInfoAttributes_5.5,
-    // decided 2026-11-25), empty by default; every other default is a named constant, so the
-    // decision is stated once, where the constant is defined.
+    // decided 2026-11-25), empty, unversioned (0) by default; every other default is a named
+    // constant, whose decided value (2026-11-27) is checked here, so a change to it fails.
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::EncoderDesc::attributes), IrisSlide::Attributes>);
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::EncoderDesc::source), std::filesystem::path>);
     const IrisSlide::EncoderDesc desc;
     CHECK(desc.attributes.empty());
     CHECK(desc.attributes.type == IrisSlide::METADATA_UNDEFINED);
+    CHECK(desc.attributes.version == 0);
+    STATIC_CHECK(IrisSlide::QUALITY_DEFAULT == 90);
+    STATIC_CHECK(IrisSlide::SUBSAMPLE_DEFAULT == IrisSlide::SUBSAMPLE_422);
+    STATIC_CHECK(IrisSlide::MEMORY_BUDGET_DEFAULT == 0);   // 0 asks the encoder for a quarter of physical memory
+    STATIC_CHECK(IrisSlide::LAYER_STEP_DEFAULT == 2);
     CHECK(desc.encoding == IrisSlide::TILE_ENCODING_JPEG);
     CHECK(desc.quality == IrisSlide::QUALITY_DEFAULT);
     CHECK(desc.subsampling == IrisSlide::SUBSAMPLE_DEFAULT);
