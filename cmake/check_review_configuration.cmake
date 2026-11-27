@@ -16,7 +16,8 @@
 #   - both review jobs run only for a pull request from a branch of this repository, and a
 #     fork's pull request gets a job that states why it is skipped;
 #   - GOVERNANCE_READ_TOKEN reaches only the step that checks out Aptix-Bio/governance at the
-#     pinned commit, and every other action is pinned by a full commit SHA;
+#     pinned commit and, as `planning-token`, the bot's action, which checks out the private plans
+#     and conventions read-only;, and every other action is pinned by a full commit SHA;
 #   - pull request text reaches a `run:` script only through `env:`, and every job is bounded;
 #   - the rubric's shared items include Traceability, and every shared rule and plan file it names
 #     is a bare file name (PlansPrivate_7.4).
@@ -159,6 +160,7 @@ escaped(base_checkout [=[ref: ${{ github.sha }}]=])
 escaped(governance_ref [=[ref: ${{ env.GOVERNANCE_COMMIT }}]=])
 escaped(token_use [=[token: ${{ secrets.GOVERNANCE_READ_TOKEN }}]=])
 escaped(token_check [=[GOVERNANCE_READ_TOKEN: ${{ secrets.GOVERNANCE_READ_TOKEN != '' }}]=])
+escaped(planning_token [=[planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}]=])
 escaped(head_data [=[HEAD_SHA: ${{ github.event.pull_request.head.sha }}]=])
 set(fetches_code "(git (checkout|fetch|switch|clone|pull)|gh pr checkout|refs/pull/|github\\.head_ref)")
 string(REPLACE "\n      - " ";" steps "${jobs_text}")
@@ -230,8 +232,12 @@ foreach(step IN LISTS steps)
             problem("step '${first}': '${stripped}' uses the head beyond HEAD_SHA")
         endif()
         string(FIND "${line}" "secrets.GOVERNANCE_READ_TOKEN" at)
-        if(NOT at EQUAL -1 AND NOT stripped STREQUAL token_use AND NOT stripped STREQUAL token_check)
+        if(NOT at EQUAL -1 AND NOT stripped STREQUAL token_use AND NOT stripped STREQUAL token_check
+           AND NOT stripped STREQUAL planning_token)
             problem("step '${first}': '${stripped}' passes GOVERNANCE_READ_TOKEN beyond the governance checkout")
+        endif()
+        if(stripped STREQUAL planning_token AND NOT step MATCHES "(^|\n) *uses: \\./governance/review-bot\n")
+            problem("step '${first}': planning-token is given to a step that is not the bot's action")
         endif()
         if(stripped STREQUAL token_use AND NOT step MATCHES "\n *repository: Aptix-Bio/governance\n")
             problem("step '${first}': the governance token is given to a step that is not the governance checkout")

@@ -57,7 +57,7 @@ concurrency:
 env:
   # Aptix-Bio/governance at the merge of its PR 12 (untagged), the bot that keeps each pull
   # request's reviews as one conversation in the Actions cache.
-  GOVERNANCE_COMMIT: eea566a60b93920050c30bfce901e250668186a1
+  GOVERNANCE_COMMIT: 59cfd336d368529ac2264ac316d8e93632e65b1c
 
 jobs:
   review:
@@ -90,6 +90,8 @@ jobs:
           persist-credentials: false
       - id: bot
         uses: ./governance/review-bot
+        with:
+          planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
       # The previous review's conversation, which this review adds to: the key is its SHA-256,
       # named by the state the bot sealed in its comment, and `review` checks the restored file.
       - id: previous
@@ -111,6 +113,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
           PYTHON: ${{ steps.bot.outputs.python }}
           SCRIPT: ${{ steps.bot.outputs.script }}
+          PLANNING: ${{ steps.bot.outputs.planning }}
           BOT_REF: ${{ env.GOVERNANCE_COMMIT }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -118,7 +121,7 @@ jobs:
           RULES_SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          "$PYTHON" "$SCRIPT" review --pr "$PR_NUMBER" --base-dir base --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA" \
+          "$PYTHON" "$SCRIPT" review --pr "$PR_NUMBER" --planning "$PLANNING" --base-dir base --base-sha "$BASE_SHA" --head-sha "$HEAD_SHA" \
             --rubric-commit "$RULES_SHA" --bot-ref "$BOT_REF" --run-url "$RUN_URL" --out verdict.json --transcript transcript.json
           test -s verdict.json
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -169,6 +172,8 @@ jobs:
           persist-credentials: false
       - id: bot
         uses: ./governance/review-bot
+        with:
+          planning-token: ${{ secrets.GOVERNANCE_READ_TOKEN }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: needs.review.result == 'success'
         with:
@@ -177,10 +182,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PYTHON: ${{ steps.bot.outputs.python }}
           SCRIPT: ${{ steps.bot.outputs.script }}
+          PLANNING: ${{ steps.bot.outputs.planning }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: '"$PYTHON" "$SCRIPT" publish --pr "$PR_NUMBER" --head-sha "$HEAD_SHA" --rubric base/.github/review/rubric.toml --base-dir base --verdict verdict.json --run-url "$RUN_URL"'
+        run: '"$PYTHON" "$SCRIPT" publish --pr "$PR_NUMBER" --planning "$PLANNING" --head-sha "$HEAD_SHA" --rubric base/.github/review/rubric.toml --base-dir base --verdict verdict.json --run-url "$RUN_URL"'
 
   fork-skipped:
     name: Fork pull requests get no model review
