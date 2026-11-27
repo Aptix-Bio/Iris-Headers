@@ -57,12 +57,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Aptix-Bio/governance at the merge of its PR 16 (1afbc99, untagged): the bot that reads the
+  # Aptix-Bio/governance at the merge of its PR 13 (59cfd33, untagged): the bot that reads the
   # rubric's shared rules and items and this repository's privately kept plans from a read-only
-  # checkout its action makes with `planning-token`, keeps each pull request's reviews as one
-  # conversation in the Actions cache, and takes a work-item ID to hold a lowercase letter, so an
-  # UPPER_SNAKE constant in code is not traced as an item (moved 2026-11-27 from 59cfd33).
-  GOVERNANCE_COMMIT: 1afbc996fc0426cbc190b6518c8fd7dcb0516b8e
+  # checkout its action makes with `planning-token`, and keeps each pull request's reviews as one
+  # conversation in the Actions cache.
+  GOVERNANCE_COMMIT: 59cfd336d368529ac2264ac316d8e93632e65b1c
 
 jobs:
   review:
