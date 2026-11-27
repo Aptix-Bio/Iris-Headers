@@ -1,4 +1,4 @@
-# BlacksmithRunners_1.4 (development/MODERNIZATION.md): every job in
+# BlacksmithRunners_1.4 (development/WBS.md): every job in
 # .github/workflows runs on a pinned Blacksmith runner (decided 2026-11-24).
 # A GitHub-hosted label
 # (ubuntu-24.04, macos-15, windows-2025) would bill GitHub minutes, which

@@ -2,9 +2,9 @@
 
 Binding conventions for Iris-Headers' code and plans: the C++20 headers under
 `include/` and `priv/`, the runtime sources under `src/`, their tests, and the
-CMake and Bazel builds. The plan and its decisions live in
-[MODERNIZATION.md](MODERNIZATION.md); where they are more specific than this
-guide, they win. Adopted 2026-11-24 from the style guide the maintainer keeps
+CMake and Bazel builds. The design and its decisions live in
+[ARCHITECTURE.md](ARCHITECTURE.md), the work in [WBS.md](WBS.md); where they are more specific
+than this guide, they win. Adopted 2026-11-24 from the style guide the maintainer keeps
 for the Iris repositories, with the references to other projects removed, so
 that the review bot (`.github/review/rubric.toml`) judges a pull request
 against rules this repository carries.

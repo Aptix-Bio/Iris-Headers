@@ -1,4 +1,4 @@
-# The review bot's rubric (ReviewBot_1.5, development/MODERNIZATION.md). One [[item]] per checkbox
+# The review bot's rubric (ReviewBot_1.5, development/WBS.md). One [[item]] per checkbox
 # the bot ticks in the pull request's "Agent review" section. The bot runs from Aptix-Bio/governance
 # at the commit .github/workflows/review.yml pins, and loads this file from Iris-Headers' default
 # branch, never from the pull request under review, so a pull request cannot change the rules it
@@ -12,24 +12,31 @@
 [review]
 product = "Iris-Headers, the shared public C++ headers of the Iris file format and slide libraries (types, Result, Buffer, the lock-free queue, SIMD helpers), MIT-licensed"
 # The rules the model reviews against, read whole from the default branch; a missing one fails the
-# review. Iris-Headers keeps no requirements matrix: MODERNIZATION.md is its plan, its decisions
-# (§4) and its work breakdown (§5) in one file, and is sent whole because a header change is judged
-# against the target (§3) and the decisions as much as against the work item it names.
+# review. ARCHITECTURE.md is sent whole because a header change is judged against the target (§3)
+# and the decisions (§4) as much as against the work item it names; README.md holds the ID scheme
+# and the update rule, RTM.md the requirements.
 reference_files = [
     "development/style_guide.md",
     "development/ci_runners.md",
-    "development/MODERNIZATION.md",
+    "development/ARCHITECTURE.md",
+    "development/README.md",
+    "development/RTM.md",
     "development/ERRATA.md",
+]
+# Sent as the list items whose bold ID (`**StrongIndices_4.2**`) the pull request names in its
+# title or description or on a line it adds, each with the lines nested under it. The WBS changes
+# in almost every pull request; sent whole it would end the cached prefix at every merge.
+excerpt_files = [
+    "development/WBS.md",
 ]
 
 [trace]
-# Every new tick in MODERNIZATION.md's work breakdown links to the GitHub commit that did the work;
-# a line that does not fails `item`. Checked by the bot itself. Iris-Headers has no requirements
-# matrix, so no table rows are traced.
+# Every new tick in WBS.md, and every RTM.md row moved to these statuses, links to the GitHub
+# commit that did the work; a line that does not fails `item`. Checked by the bot itself.
 item = "Traceability"
-ticks = ["development/MODERNIZATION.md"]
-rows = []
-row_statuses = []
+ticks = ["development/WBS.md"]
+rows = ["development/RTM.md"]
+row_statuses = ["Implemented", "Verified"]
 
 [verification]
 # One maintainer: the pull request's author may give the final human verification until a second
@@ -38,16 +45,19 @@ allow_author = true
 
 [[item]]
 id = "Traceability"
-title = "Traceability: the MODERNIZATION.md work items named; ticks carry evidence and a link to the work commit"
+title = "Traceability: the WBS.md work items and RTM.md rows named; ticks carry evidence and a link to the work commit"
 blocking = true
 guidance = """
-The description names the MODERNIZATION.md work items it completes or advances (spelled out,
-`StandaloneHeaderBuild_1.1`, never `SHB1`) and the §4 decision it implements, if any. Every box
+The description names the WBS.md work items it completes or advances (spelled out,
+`StandaloneHeaderBuild_1.1`, never `SHB1`), the RTM.md rows it touches, and the ARCHITECTURE.md
+§4 decision it implements, if any. Every box
 ticked in the diff has its evidence on the same line (a test, a file, pasted output or a CI run)
 and a link to the commit that did the work,
 `[1234567](https://github.com/Aptix-Bio/Iris-Headers/commit/<full hash>)`. The bot checks the
 links itself; judge only whether each linked commit plausibly does what the line claims. A change
-to code or a workflow without a matching MODERNIZATION.md update in the same pull request fails.
+to code or a workflow without a matching WBS.md update in the same pull request fails; an RTM.md
+row moved to Implemented or Verified links its commit the same way, and code that implements a
+row carries its `// RTM <ID>` or `# RTM <ID>` tag (development/README.md, Identifiers).
 A mistake that reached `main`, a consumer or a measurement has its row in development/ERRATA.md.
 """
 
@@ -72,7 +82,7 @@ blocking = true
 guidance = """
 Similar routines are one routine with an enum or optional argument; repeated code is extracted; a
 new function that already exists is a failure. Result, Buffer, Iris::FIFO::Queue and Iris::Async
-are reused, never re-implemented. Iris-Headers holds the shared vocabulary (MODERNIZATION.md §3,
+are reused, never re-implemented. Iris-Headers holds the shared vocabulary (ARCHITECTURE.md §3,
 VocabularyScopeQuestion_1): a project's own API, a graphics API, a binding's glue or another
 project's dependency pins added here fail.
 """
@@ -132,7 +142,7 @@ private product, repository, internal infrastructure, cloud project or account. 
 allowed where they are needed: Aptix-Bio/governance, as the private source of the review bot in
 .github/ and the documents describing the review; and the licensed codec, named only as a library
 that licensees load at runtime. The open-source slide library is Iris-Slide (renamed 2026-11-24,
-MODERNIZATION.md); a line written after the rename does not call it Iris-Codec. A line that only
+ARCHITECTURE.md); a line written after the rename does not call it Iris-Codec. A line that only
 keeps a name already on the line it edits is judged as it was. Also fails: a quotation of the
 maintainer or of a private conversation (state a decision as a dated requirement instead), a path
 on someone's machine (`/Users/...`, `C:\\Users\\...`, a home directory), and anything that looks
@@ -179,12 +189,12 @@ file, credential, private key or token. No binary blobs. Any doubt fails, with t
 
 [[item]]
 id = "Documentation"
-title = "Documentation: docs describing several types carry Mermaid diagrams that match the code; decisions recorded in MODERNIZATION.md"
+title = "Documentation: docs describing several types carry Mermaid diagrams that match the code; decisions recorded in ARCHITECTURE.md"
 blocking = false
 guidance = """
 A document that describes more than one type or component has a Mermaid classDiagram (or a
 flowchart or sequenceDiagram for flow and lifecycle) that matches the code in this diff and
-renders. A decision that changed is recorded, dated, in MODERNIZATION.md §4 or beside the work
+renders. A decision that changed is recorded, dated, in ARCHITECTURE.md §4 or beside the work
 item it changes. README.md stays true to how a consumer fetches and links the headers.
 """
 

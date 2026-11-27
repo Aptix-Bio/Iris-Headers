@@ -1,4 +1,4 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1; development/ERRATA.md, 2026-11-24): a
+# ReviewBot_1.5 (development/WBS.md, SafetyNet_1; development/ERRATA.md, 2026-11-24): a
 # job that needs repository variables or secrets fails first, naming each one that is missing,
 # instead of failing later inside an action whose message does not say which setting to create.
 #

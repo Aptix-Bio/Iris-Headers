@@ -1,4 +1,4 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1): the review bot's workflow keeps the
+# ReviewBot_1.5 (development/WBS.md, SafetyNet_1): the review bot's workflow keeps the
 # safety properties that make `pull_request_target` safe in a public repository, and the files the
 # bot reads from the default branch exist.
 #
@@ -18,7 +18,7 @@
 #     pinned commit, and every other action is pinned by a full commit SHA;
 #   - pull request text reaches a `run:` script only through `env:`, and every job is bounded.
 # GitHub, "Securely using pull_request_target" and "Secure use reference" (docs.github.com,
-# read 2026-11-24) give the reasons; development/MODERNIZATION.md, ReviewBot_1.5, the sources.
+# read 2026-11-24) give the reasons; development/WBS.md, ReviewBot_1.5, the sources.
 cmake_minimum_required(VERSION 3.20)
 
 if(NOT DEFINED REPOSITORY)

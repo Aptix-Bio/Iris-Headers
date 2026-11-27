@@ -1,4 +1,4 @@
-# DownstreamBuild_1.2 (development/MODERNIZATION.md, SafetyNet_1).
+# DownstreamBuild_1.2 (development/WBS.md, SafetyNet_1).
 #
 # A header change is correct only relative to what consumes it, so this builds
 # the consumers against the change, and against the base when that fails (the

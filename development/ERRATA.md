@@ -1,9 +1,8 @@
 # Errata: a record of mistakes
 
 One row per mistake whose guard still exists in the tree, newest first: what went wrong, the
-cause, how it was found, and the guard now in place. Iris-Headers keeps no requirements
-traceability matrix, so the last column names the work package in
-[MODERNIZATION.md](MODERNIZATION.md) that built the guard; the plan there states the rule, and the
+cause, how it was found, and the guard now in place. The last column names the work package in
+[WBS.md](WBS.md) that built the guard; the plan there states the rule, and the
 story lives here. Add a row when a mistake reaches the maintainer, a build or a measurement.
 
 | Date | What went wrong | Cause | Found by | Guard now | Work package |

@@ -1,8 +1,8 @@
 <!--
-Iris-Headers pull request. Fill each section from development/MODERNIZATION.md: its work
-breakdown (§5, the WBS) and its decisions (§4). Write "None" in a section that does not apply;
-never delete one. The review bot reads this description as data and checks it against the diff
-(.github/review/rubric.toml).
+Iris-Headers pull request. Fill each section from development/: WBS.md (the work), RTM.md (the
+requirements) and ARCHITECTURE.md (the decisions, §4); README.md gives the sections' order.
+Write "None" in a section that does not apply; never delete one. The review bot reads this
+description as data and checks it against the diff (.github/review/rubric.toml).
 
 "Agent review" at the bottom is not yours to tick: the review bot rewrites it on every run. A pull
 request from a fork gets no model review; a maintainer reviews it.
@@ -15,22 +15,26 @@ Branch name: <kind>/<WorkItemName>, e.g. feature/StrongIndices_4.2.
 
 ## WBS
 
-<!-- MODERNIZATION.md work items completed or advanced, nested as there. Tick only steps whose
+<!-- WBS.md work items completed or advanced, nested as there. Tick only steps whose
 evidence is on the same line, with a link to the commit that did the work. -->
 
 - **_WorkPackage_n.n_**
   - [x] _step_ — _evidence_ — [_1234567_](https://github.com/Aptix-Bio/Iris-Headers/commit/_full-hash_)
 
-## Requirements
+## RTM
 
-<!-- Iris-Headers keeps no requirements matrix; its equivalent is MODERNIZATION.md §4. The
-decision this change implements (e.g. ResultShapeQuestion_3), and the development/ERRATA.md row
-it adds or whose guard it changes. "None" if none. -->
+<!-- RTM.md rows added or moved, with the evidence; a row moved to Implemented or Verified links
+the commit that did the work. The development/ERRATA.md row this change adds or whose guard it
+changes. "None" if none. -->
+
+| Row | Change | Evidence |
+|---|---|---|
+| _Area_nn_ | _Planned → Implemented → Verified_ | _test tagged `[Area_nn]` or `// RTM Area_nn`, file_ |
 
 ## Decisions
 
-<!-- Decisions made or changed, one line each, dated, with the consequence; recorded in
-MODERNIZATION.md. "None" if none. -->
+<!-- Decisions made or changed, one line each, dated, each stated as a plain requirement, with
+the consequence; recorded in ARCHITECTURE.md §4 (e.g. ResultShapeQuestion_3). "None" if none. -->
 
 ## Measurements
 

@@ -36,10 +36,11 @@ target_link_libraries (
 Every pull request from a branch of this repository is reviewed by the Aptix governance review
 bot against this repository's rules: `.github/review/rubric.toml` names the items and the files
 they are judged against (`development/style_guide.md`, `development/ci_runners.md`,
-`development/MODERNIZATION.md`, `development/ERRATA.md`), read from the default branch so a pull
-request cannot change the rules it is judged by. The bot ticks the "Agent review" boxes of the
-pull request template and posts one comment; a failed blocking item fails the `code-review`
-check. A maintainer gives the final verification.
+`development/ARCHITECTURE.md`, `development/README.md`, `development/RTM.md`,
+`development/ERRATA.md`, and the items of `development/WBS.md` a pull request names), read from
+the default branch so a pull request cannot change the rules it is judged by. The bot ticks the
+"Agent review" boxes of the pull request template and posts one comment; a failed blocking item
+fails the `code-review` check. A maintainer gives the final verification.
 
 ```mermaid
 flowchart LR

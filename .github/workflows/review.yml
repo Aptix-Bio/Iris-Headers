@@ -1,4 +1,4 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1): the Aptix governance review bot on
+# ReviewBot_1.5 (development/WBS.md, SafetyNet_1): the Aptix governance review bot on
 # every non-draft pull request, judging it against this repository's rubric
 # (.github/review/rubric.toml) and the rules it names. Two jobs, so the job holding the model key
 # cannot write to the pull request and the job that writes never sees the key:
@@ -6,8 +6,8 @@
 #      saves it as an artifact, and carries the pull request's review conversation in the Actions
 #      cache so each review adds to the one before it.
 #   2. Update PR from Agent: no key, pull-requests: write; ticks the "Agent review" boxes, posts
-#      one comment, checks that every new MODERNIZATION.md tick links its commit, and fails if a
-#      blocking item failed or step 1 did.
+#      one comment, checks that every new WBS.md tick and every RTM.md row moved to Implemented
+#      or Verified links its commit, and fails if a blocking item failed or step 1 did.
 # Both print the review to their log, each line starting `review_bot:`.
 #
 # Where the bot comes from. The bot lives in Aptix-Bio/governance, a private repository, and

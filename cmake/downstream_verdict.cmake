@@ -1,4 +1,4 @@
-# DownstreamBuild_1.2 (development/MODERNIZATION.md, SafetyNet_1): one consumer cell of
+# DownstreamBuild_1.2 (development/WBS.md, SafetyNet_1): one consumer cell of
 # downstream.yml. A header change is correct only relative to what consumes it, so this builds the
 # consumer against the change, and against the base when that fails (the control run):
 #   change green                                  -> pass

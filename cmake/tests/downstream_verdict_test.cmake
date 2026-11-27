@@ -1,4 +1,4 @@
-# ReviewBot_1.5 (development/MODERNIZATION.md, SafetyNet_1; development/ERRATA.md, 2026-11-24):
+# ReviewBot_1.5 (development/WBS.md, SafetyNet_1; development/ERRATA.md, 2026-11-24):
 # cmake/downstream_verdict.cmake fails a pull request whose consumer builds only from its paired
 # branch. After the rename merged, every consumer cell of `downstream` failed on main, because
 # the pull request's own run had built Iris-File-Extension's paired branch and IFE's main still
