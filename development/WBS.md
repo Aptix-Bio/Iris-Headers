@@ -151,14 +151,14 @@ Shown by: a search of the tree for the old plan file's name, which finds only th
 record of the move, and `cmake -P cmake/check_review_configuration.cmake` (every file the rubric
 names exists).
 
-- [x] **DocumentsSplit_7.1** — the plan's text split without loss: purpose, findings, target,
+- [x] **DocumentsSplit_7.1** [d1ae181](https://github.com/Aptix-Bio/Iris-Headers/commit/d1ae18177b970400d89a32d130681aa301f4f04f) — the plan's text split without loss: purpose, findings, target,
   decisions and questions to ARCHITECTURE.md (every question ID, answer and date kept); the
   conventions, every package, item, tick, evidence line and commit link, and the order to this
   WBS; goals and requirement rows to a new RTM; a new README with the file table, the ID scheme
   and the update rule. Private names in the moved prose are written generically, as the public
   repository rule requires. Evidence: each of the five Mermaid diagrams renders with mermaid-cli
   12.2.0 (2026-11-26) [Process_01]
-- [x] **ReferencesMoved_7.2** — every reference to the old file and its sections, in code
+- [x] **ReferencesMoved_7.2** [d1ae181](https://github.com/Aptix-Bio/Iris-Headers/commit/d1ae18177b970400d89a32d130681aa301f4f04f) — every reference to the old file and its sections, in code
   comments, CMake scripts, workflows, the rubric, the pull request template, CODEOWNERS, the
   README and the tests, names the file and section that now hold the content; the rubric sends
   ARCHITECTURE.md, README.md, RTM.md and ERRATA.md whole and this WBS as excerpts, and traces
