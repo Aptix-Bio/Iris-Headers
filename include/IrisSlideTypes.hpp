@@ -119,7 +119,7 @@ using       Annotations     = Iris::Annotations;
 using       AnnotationGroup = Iris::AnnotationGroup;
 using       BYTE            = Iris::BYTE;
 using       Mutex           = std::mutex;
-// FileTypesShared_3.5 (decided 2026-11-28): the file vocabulary lives in
+// RTM Format_08 (decided 2026-11-28): the file vocabulary lives in
 // IrisFileTypes.hpp, namespace Iris. These names alias it, and the using-enum
 // declarations keep each enumerator resolving under IrisSlide, so a consumer
 // naming IrisSlide::TILE_ENCODING_JPEG builds unchanged until it moves.
