@@ -101,7 +101,9 @@ the order of the merges. "None: no consumer compiles anything this changes" if s
 - [ ] **DataProtection** — no slides, patient data, secrets, keys or binaries
 - [ ] **Documentation** — Mermaid diagrams match the code; decisions recorded (advisory)
 - [ ] **AgentDisclosure** — AI authorship disclosed and specific
-- [ ] **HeaderHygiene** — headers compile alone; no macros for constants; no reserved identifiers
+- [ ] **HeadersVocabularyScope** — each added or changed declaration used by two or more repositories, uses named
+- [ ] **HeadersPrimitivesOnly** — the inline code that makes the vocabulary usable, no single repository's algorithm
+- [ ] **HeadersAbiStability** — layouts, values and signatures stable; headers standalone, portable, no macro constants or reserved identifiers
 
 _Not yet reviewed._
 <!-- review-bot:end -->

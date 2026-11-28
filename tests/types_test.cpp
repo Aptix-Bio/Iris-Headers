@@ -6,6 +6,7 @@
 // Buffer_change_strength, which nothing defines, and Buffer_write_into_buffer
 // with a signature src/IrisBuffer.cpp does not define (it defines a
 // (Buffer&, size_t&) overload). Both are fixed in RuntimeLibraries_4.5.
+#include <IrisFileTypes.hpp>
 #include <IrisSlideTypes.hpp>
 #include <IrisCore.hpp>
 #include <IrisAsync.hpp>
@@ -547,4 +548,63 @@ TEST_CASE("Encoding matches IFE's tile_encodings value for value: UASTC holds 4 
     STATIC_CHECK(IrisSlide::TILE_ENCODING_XUASTC == 5);
     STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_LZ) == 4);
     STATIC_CHECK(static_cast<int>(IrisSlide::CACHE_ENCODING_NO_COMPRESSION) == 5);
+}
+
+TEST_CASE("File vocabulary: the IrisSlide names alias the Iris types of IrisFileTypes.hpp", "[Format_08]") {
+    // FileTypesShared_3.5 (decided 2026-11-28): the types an Iris file holds move to
+    // IrisFileTypes.hpp in namespace Iris, since Iris-File-Extension writes them and may not
+    // depend on Iris-Slide. The IrisSlide names stay as aliases until the removal step, so
+    // every consumer's main builds unchanged.
+    STATIC_CHECK(std::is_same_v<IrisSlide::Encoding, Iris::Encoding>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::MetadataType, Iris::MetadataType>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::Attributes, Iris::Attributes>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::Metadata, Iris::Metadata>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::ImageEncoding, Iris::ImageEncoding>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::ImageOrientation, Iris::ImageOrientation>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::AssociatedImageInfo, Iris::AssociatedImageInfo>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::Offset, Iris::Offset>);
+    STATIC_CHECK(std::is_same_v<IrisSlide::Size, Iris::Size>);
+    // The enumerators keep resolving under IrisSlide, as consumers name them.
+    STATIC_CHECK(std::is_same_v<decltype(IrisSlide::TILE_ENCODING_JPEG), Iris::Encoding>);
+    STATIC_CHECK(std::is_same_v<decltype(IrisSlide::METADATA_I2S), Iris::MetadataType>);
+    STATIC_CHECK(std::is_same_v<decltype(IrisSlide::IMAGE_ENCODING_AVIF), Iris::ImageEncoding>);
+    STATIC_CHECK(std::is_same_v<decltype(IrisSlide::ORIENTATION_90), Iris::ImageOrientation>);
+}
+
+TEST_CASE("File vocabulary: enumerator values and on-disk widths are unchanged by the move", "[Format_08]") {
+    // IFE spec/ife_constants.json: tile_encodings, metadata_formats and image_encodings are
+    // one byte on disk, the orientation a half-precision float in two bytes, offsets and sizes
+    // eight bytes. Each value equals the specification's, so the move renumbers nothing.
+    STATIC_CHECK(std::is_same_v<std::underlying_type_t<Iris::Encoding>, std::uint8_t>);
+    STATIC_CHECK(std::is_same_v<std::underlying_type_t<Iris::MetadataType>, std::uint8_t>);
+    STATIC_CHECK(std::is_same_v<std::underlying_type_t<Iris::ImageEncoding>, std::uint8_t>);
+    STATIC_CHECK(std::is_same_v<std::underlying_type_t<Iris::ImageOrientation>, std::uint16_t>);
+    STATIC_CHECK(std::is_same_v<Iris::Offset, std::uint64_t>);
+    STATIC_CHECK(std::is_same_v<Iris::Size, std::uint64_t>);
+    STATIC_CHECK(Iris::TILE_ENCODING_UNDEFINED == 0);
+    STATIC_CHECK(Iris::TILE_ENCODING_IRIS == 1);
+    STATIC_CHECK(Iris::TILE_ENCODING_JPEG == 2);
+    STATIC_CHECK(Iris::TILE_ENCODING_AV1 == 3);
+    STATIC_CHECK(Iris::TILE_ENCODING_UASTC == 4);
+    STATIC_CHECK(Iris::TILE_ENCODING_XUASTC == 5);
+    STATIC_CHECK(Iris::TILE_ENCODING_DEFAULT == Iris::TILE_ENCODING_JPEG);
+    STATIC_CHECK(Iris::METADATA_UNDEFINED == 0);
+    STATIC_CHECK(Iris::METADATA_I2S == 1);
+    STATIC_CHECK(Iris::METADATA_DICOM == 2);
+    STATIC_CHECK(Iris::METADATA_FREE_TEXT == 3);
+    STATIC_CHECK(Iris::IMAGE_ENCODING_UNDEFINED == 0);
+    STATIC_CHECK(Iris::IMAGE_ENCODING_PNG == 1);
+    STATIC_CHECK(Iris::IMAGE_ENCODING_JPEG == 2);
+    STATIC_CHECK(Iris::IMAGE_ENCODING_AVIF == 3);
+    STATIC_CHECK(Iris::IMAGE_ENCODING_DEFAULT == Iris::IMAGE_ENCODING_JPEG);
+    STATIC_CHECK(Iris::ORIENTATION_0 == 0x0000);
+    STATIC_CHECK(Iris::ORIENTATION_90 == 0x55A0);
+    STATIC_CHECK(Iris::ORIENTATION_180 == 0x59A0);
+    STATIC_CHECK(Iris::ORIENTATION_270 == 0x5C38);
+    const Iris::Metadata metadata;
+    CHECK(metadata.attributes.type == Iris::METADATA_UNDEFINED);
+    CHECK(metadata.attributes.version == 0);
+    const Iris::AssociatedImageInfo info;
+    CHECK(info.encoding == Iris::IMAGE_ENCODING_UNDEFINED);
+    CHECK(info.orientation == Iris::ORIENTATION_0);
 }

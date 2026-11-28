@@ -2,8 +2,9 @@
 # .github/workflows/review.yml pins, and loads this file from Iris-Headers' default branch, never
 # from the pull request under review, so a pull request cannot change the rules it is judged by.
 # The shared items come first, in the family's shared order, with the text this repository adds
-# to each under [shared_guidance]; this repository's own item, HeaderHygiene, follows. One
-# checkbox per item in the pull request's "Agent review" section.
+# to each under [shared_guidance]; this repository's own items follow, kept privately with its
+# plans so that a merged pull request cannot remove them (decided 2026-11-28), and this file
+# holds none. One checkbox per item in the pull request's "Agent review" section.
 #
 # An item passes, fails, or does not apply. A failed item with blocking = true fails the
 # `code-review` check; a failed advisory item is reported only. Changing this file changes what
@@ -115,17 +116,3 @@ plan_rows = ["RTM.md"]
 # One maintainer: the pull request's author may give the final human verification until a second
 # maintainer joins.
 allow_author = true
-
-[[item]]
-id = "HeaderHygiene"
-title = "Header hygiene: every header compiles standalone; no macros for constants; no reserved identifiers"
-blocking = true
-guidance = """
-CONTRIBUTING.md, Headers (rules 1 to 3). Every header the diff adds or changes includes what it
-uses and compiles alone (`cmake/standalone_headers.cmake`, which globs include/ and priv/).
-No macro defines a constant, a type or a function that `constexpr`, `inline`, a scoped
-enumeration or a template can express; the export attribute is the exception. No identifier
-begins with an underscore followed by an uppercase letter or contains two underscores in a row,
-and none at global scope begins with an underscore, in any scope the diff touches (include guards
-included). A diff that touches no header or source: not applicable.
-"""
