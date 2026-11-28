@@ -25,6 +25,7 @@ target_sources(
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/
     FILES 
     ${IRIS_INCLUDE_DIR}/IrisTypes.hpp
+    ${IRIS_INCLUDE_DIR}/IrisFileTypes.hpp
     ${IRIS_INCLUDE_DIR}/IrisCore.hpp
     ${IRIS_INCLUDE_DIR}/IrisSlideTypes.hpp
     ${IRIS_INCLUDE_DIR}/IrisSlideCore.hpp

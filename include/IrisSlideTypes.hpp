@@ -33,6 +33,7 @@
 #include <string>
 #include <thread>
 #include "IrisTypes.hpp"
+#include "IrisFileTypes.hpp"
 namespace   Iris {
 using       Instance        = std::shared_ptr<struct Instance_t>;
 using       Device          = std::shared_ptr<struct Device_t>;
@@ -118,65 +119,25 @@ using       Annotations     = Iris::Annotations;
 using       AnnotationGroup = Iris::AnnotationGroup;
 using       BYTE            = Iris::BYTE;
 using       Mutex           = std::mutex;
-using       Offset          = uint64_t;
-using       Size            = uint64_t;
+// FileTypesShared_3.5 (decided 2026-11-28): the file vocabulary lives in
+// IrisFileTypes.hpp, namespace Iris. These names alias it, and the using-enum
+// declarations keep each enumerator resolving under IrisSlide, so a consumer
+// naming IrisSlide::TILE_ENCODING_JPEG builds unchanged until it moves.
+using       Offset          = Iris::Offset;
+using       Size            = Iris::Size;
+using       Encoding        = Iris::Encoding;
+using       MetadataType    = Iris::MetadataType;
+using       Attributes      = Iris::Attributes;
+using       ImageEncoding   = Iris::ImageEncoding;
+using       ImageOrientation = Iris::ImageOrientation;
+using       Metadata        = Iris::Metadata;
+using       AssociatedImageInfo = Iris::AssociatedImageInfo;
+using enum  Iris::Encoding;
+using enum  Iris::MetadataType;
+using enum  Iris::ImageEncoding;
+using enum  Iris::ImageOrientation;
 struct IRIS_EXPORT ContextCreateInfo {
     Iris::Device    device                  = nullptr;
-};
-/// Form of encoding used to generate compressed tile bytestreams
-enum IRIS_EXPORT Encoding : uint8_t {
-    TILE_ENCODING_UNDEFINED                 = 0,
-    TILE_ENCODING_IRIS                      = 1,
-    TILE_ENCODING_JPEG                      = 2,
-    /// A bare AV1 sequence in the Low Overhead Bitstream Format (AV1 bitstream
-    /// specification, "Low overhead bitstream format"), with no container: one
-    /// shown frame per focal plane, so a single-plane tile is one key frame.
-    /// Replaced AVIF tiles at value 3 (decided 2026-11-25, with IFE's matching
-    /// spec change); no .iris file in use carried AVIF tiles, so the value was
-    /// reassigned instead of retired. Associated images keep IMAGE_ENCODING_AVIF.
-    TILE_ENCODING_AV1                       = 3,
-    /// GPU block-compressed UASTC LDR 4x4 (Basis Universal), stored bare: one
-    /// Zstandard frame whose content is the tile's 16-byte blocks in raster
-    /// order, one focal plane and one mip level. Transcoded by the reader to
-    /// ASTC 4x4 (lossless) or BC7 instead of decoded to pixels. Added
-    /// 2026-11-25 with IFE's matching spec change (tile_encodings 1.1).
-    TILE_ENCODING_UASTC                     = 4,
-    /// GPU block-compressed XUASTC LDR (Basis Universal), stored bare: one
-    /// XUASTC LDR bitstream, one focal plane and one mip level. Its block
-    /// footprint and whether its bitstream is fixed across Basis Universal
-    /// versions are open in IFE's specification. Added 2026-11-25.
-    TILE_ENCODING_XUASTC                    = 5,
-    TILE_ENCODING_DEFAULT                   = TILE_ENCODING_JPEG //v2025.1 - will change
-};
-// Values equal IFE's metadata_formats (spec/ife_constants.json). METADATA_I2S
-// promises the pairs identify no individual, so free text has its own value
-// and never claims I2S (IFE 1.1 erratum: 1.0 aliased the two).
-enum IRIS_EXPORT MetadataType : uint8_t {
-    METADATA_UNDEFINED                      = 0,
-    METADATA_I2S                            = 1,
-    METADATA_DICOM                          = 2,
-    METADATA_FREE_TEXT                      = 3,
-};
-struct IRIS_EXPORT Attributes :
-public std::unordered_map<std::string, std::u8string> {
-    MetadataType    type                    = METADATA_UNDEFINED;
-    uint16_t        version                 = 0;
-};
-enum IRIS_EXPORT ImageEncoding : uint8_t {
-    IMAGE_ENCODING_UNDEFINED                = 0,
-    IMAGE_ENCODING_PNG                      = 1,
-    IMAGE_ENCODING_JPEG                     = 2,
-    IMAGE_ENCODING_AVIF                     = 3,
-    IMAGE_ENCODING_DEFAULT                  = IMAGE_ENCODING_JPEG // v2025.1 - will change
-};
-enum IRIS_EXPORT ImageOrientation : uint16_t {
-    ORIENTATION_0                           = 0x0000, // Half-precision 0.0
-    ORIENTATION_90                          = 0x55A0, // Half-precision 90.0
-    ORIENTATION_180                         = 0x59A0, // Half-precision 180.0
-    ORIENTATION_270                         = 0x5C38, // Half-precision 270.0
-    ORIENTATION_minus_90                    = ORIENTATION_270,
-    ORIENTATION_minus_180                   = ORIENTATION_180,
-    ORIENTATION_minus_270                   = ORIENTATION_90,
 };
 struct IRIS_EXPORT Image {
     using           Orientation             = ImageOrientation;
@@ -186,32 +147,6 @@ struct IRIS_EXPORT Image {
     uint32_t        height                  = 0;
     Format          format                  = Iris::FORMAT_UNDEFINED;
     Orientation     orientation             = ORIENTATION_0;
-};
-/// Slide metadata containing information about the Iris File Extension slide file.
-struct IRIS_EXPORT Metadata {
-    /// List of associated / ancillary image labels describing the associated image (*eg. Label, Thumbnail*)
-    using ImageLabels                       = std::set<std::string>;
-    /// List of annotation identifiers within the slide (unique annotation identifiers)
-    using AnnotationIDs                     = std::set<uint32_t>;
-    /// List of annotation grouping names describing the group of annotations (*eg. handwriting; nuclei*)
-    using AnnotationGroups                  = std::set<std::string>;
-    
-    /// Iris Slide Version used to encode the file, if Iris Slide encoded it. Otherwise leave this blank
-    Version         codec                   = {0,0,0};
-    /// Metadata Attributes containing key-value pairs
-    Attributes      attributes;
-    /// List of associated images
-    ImageLabels     associatedImages;
-    /// ICC color profile, if contained within the file
-    std::string     ICC_profile;
-    /// Iris slide annotations
-    AnnotationIDs   annotations;
-    /// Iris slide annotation groups
-    AnnotationGroups annotationGroups;
-    /// Microns per pixel (um per pixel) at layer 0 / the lowest resolution layer (0.f if no um scale)
-    float           micronsPerPixel         = 0.f;
-    /// Magnification coefficient used to convert scale to physical microscopic magnfication (0.f if not included)
-    float           magnification           = 0.f;
 };
 
 /// Information needed to open a local Iris Encoded (.iris) file with optional defaults assigned.
@@ -234,17 +169,6 @@ struct IRIS_EXPORT SlideTileReadInfo {
     uint32_t        tileIndex               = 0;
     Buffer          optionalDestination     = NULL;
     Format          desiredFormat           = Iris::FORMAT_R8G8B8A8;
-};
-struct IRIS_EXPORT AssociatedImageInfo {
-    using           Encoding                = ImageEncoding;
-    using           Orientation             = ImageOrientation;
-    
-    std::string     imageLabel;
-    uint32_t        width                   = 0;
-    uint32_t        height                  = 0;
-    Encoding        encoding                = IMAGE_ENCODING_UNDEFINED;
-    Format          sourceFormat            = Iris::FORMAT_UNDEFINED;
-    Orientation     orientation             = ORIENTATION_0;
 };
 struct IRIS_EXPORT AssociatedImageReadInfo {
     Slide           slide                   = NULL;
