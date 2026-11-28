@@ -307,9 +307,17 @@ enum IRIS_EXPORT Subsampling : uint8_t {
 // RTM Format_07
 /// The scale between an encode's written layers when the caller names none (decided 2026-11-27).
 constexpr std::uint32_t LAYER_STEP_DEFAULT  = 2;
-/// The memory budget that asks the encoder for its own default, a quarter of the machine's
-/// physical memory (decided 2026-11-27): the encoder reads the machine, so the header names no size.
+/// The memory budget that asks the encoder for its own default, half of the machine's physical
+/// memory, held lower while the system reports memory pressure (decided 2026-11-27): the encoder
+/// reads the machine, so the header names no size.
 constexpr std::uint64_t MEMORY_BUDGET_DEFAULT = 0;
+/// How hard the encoder works on each tile, from EFFORT_MIN, the fastest, to EFFORT_MAX, the
+/// slowest and smallest at the same quality (decided 2026-11-27, EncoderEffort_5.7). An encoding
+/// with a speed setting (AV1) takes the whole range; one without (JPEG) takes EFFORT_MIN alone.
+using               Effort                  = std::uint8_t;
+constexpr Effort    EFFORT_MIN              = 0;
+constexpr Effort    EFFORT_MAX              = 6;
+constexpr Effort    EFFORT_DEFAULT          = EFFORT_MIN;
 
 // RTM Format_07
 /// What to encode, where and how (EncoderSurface_5.6, decided 2026-11-27): the encoder reads
@@ -319,13 +327,14 @@ struct IRIS_EXPORT EncoderDesc {
     std::filesystem::path source;                         ///< the slide: a DICOM whole-slide instance (JPEG, JPEG 2000 or HTJ2K frames)
     std::filesystem::path destination;                    ///< the folder the .iris file is written to
     Encoding        encoding      = TILE_ENCODING_JPEG;   ///< the IFE tile encoding written
-    Quality         quality       = QUALITY_DEFAULT;      ///< JPEG quality, 1-100
-    Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< JPEG chroma subsampling
-    std::uint64_t   memory_budget = MEMORY_BUDGET_DEFAULT;   ///< bytes held at once; MEMORY_BUDGET_DEFAULT is a quarter of physical memory
+    Quality         quality       = QUALITY_DEFAULT;      ///< tile quality, 1-100
+    Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< chroma subsampling; AV1 tiles are 4:2:0 alone, so an AV1 caller sets SUBSAMPLE_420 (Iris-Slide's command line and Python do when none is named) and the encoder refuses another
+    std::uint64_t   memory_budget = MEMORY_BUDGET_DEFAULT;   ///< the most held at once; MEMORY_BUDGET_DEFAULT is half of physical memory, less under memory pressure
     std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads, at least 1
     /// The scale between written layers: 2, 4, 8 … Layers are derived 2x at a time and every
     /// log2(layer_step)-th is written, down to one that fits one tile.
     std::uint32_t   layer_step    = LAYER_STEP_DEFAULT;
+    Effort          effort        = EFFORT_DEFAULT;       ///< EFFORT_MIN (fastest) to EFFORT_MAX (smallest)
     /// The slide's attribute pairs as the caller states them: key text, value text, their format
     /// and that format's version, written as the slide's one attributes block. The encoder checks
     /// only what IFE requires of the bytes (ASCII keys, UTF-8 values, sizes). Empty attributes
