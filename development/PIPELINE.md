@@ -87,11 +87,13 @@ flowchart LR
    checkout step and, as `planning-token`, the bot's action in both jobs, which fetches the
    privately kept rules and plans read-only (rule 10); no other step receives it. `cmake/check_review_configuration.cmake` fails naming each broken
    property.
-10. **The rubric is read from the default branch.** `.github/review/rubric.toml` names the items
-    and this repository's own documents (`development/ARCHITECTURE.md`, this file,
+10. **The rubric is read from the default branch.** `.github/review/rubric.toml` names the
+    family's shared items, with this repository's guidance for each, and this repository's own
+    documents (`development/ARCHITECTURE.md`, this file,
     `development/README.md`, `CONTRIBUTING.md`), read from the default branch so that a pull
-    request cannot change the rules it is judged by. The family's shared rules and items, and this
-    repository's work breakdown, requirement rows and errata, are kept privately; the bot's action
+    request cannot change the rules it is judged by. The family's shared rules and items, this
+    repository's own review items (HeaderHygiene folded into HeadersAbiStability, decided
+    2026-11-28), and its work breakdown, requirement rows and errata are kept privately; the bot's action
     fetches them read-only with `planning-token` into its own checkout, the bot reads them with
     `--planning`, and the rubric names them by file name only.
     `check_review_configuration.cmake` fails when a file the rubric names here is missing, or a
