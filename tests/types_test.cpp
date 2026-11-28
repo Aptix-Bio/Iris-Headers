@@ -564,7 +564,7 @@ TEST_CASE("File vocabulary: the IrisSlide names alias the Iris types of IrisFile
     STATIC_CHECK(std::is_same_v<IrisSlide::AssociatedImageInfo, Iris::AssociatedImageInfo>);
     STATIC_CHECK(std::is_same_v<IrisSlide::Offset, Iris::Offset>);
     STATIC_CHECK(std::is_same_v<IrisSlide::Size, Iris::Size>);
-    // The enumerators keep resolving under IrisSlide, as Iris-Core's codec names them.
+    // The enumerators keep resolving under IrisSlide, as consumers name them.
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::TILE_ENCODING_JPEG), Iris::Encoding>);
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::METADATA_I2S), Iris::MetadataType>);
     STATIC_CHECK(std::is_same_v<decltype(IrisSlide::IMAGE_ENCODING_AVIF), Iris::ImageEncoding>);
