@@ -522,11 +522,16 @@ TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's named d
     STATIC_CHECK(IrisSlide::SUBSAMPLE_DEFAULT == IrisSlide::SUBSAMPLE_422);
     STATIC_CHECK(IrisSlide::MEMORY_BUDGET_DEFAULT == 0);   // 0 asks the encoder for a quarter of physical memory
     STATIC_CHECK(IrisSlide::LAYER_STEP_DEFAULT == 2);
+    // Av1TileEncode_27 (decided 2026-11-27): how hard the encoder works, the fastest by default.
+    STATIC_CHECK(IrisSlide::EFFORT_MIN == 0);
+    STATIC_CHECK(IrisSlide::EFFORT_MAX == 6);
+    STATIC_CHECK(IrisSlide::EFFORT_DEFAULT == IrisSlide::EFFORT_MIN);
     CHECK(desc.encoding == IrisSlide::TILE_ENCODING_JPEG);
     CHECK(desc.quality == IrisSlide::QUALITY_DEFAULT);
     CHECK(desc.subsampling == IrisSlide::SUBSAMPLE_DEFAULT);
     CHECK(desc.memory_budget == IrisSlide::MEMORY_BUDGET_DEFAULT);
     CHECK(desc.layer_step == IrisSlide::LAYER_STEP_DEFAULT);
+    CHECK(desc.effort == IrisSlide::EFFORT_DEFAULT);
     CHECK(desc.concurrency >= 1);   // at least one worker, whatever the machine reports
     const IrisSlide::EncoderProgress progress;
     CHECK(progress.state == IrisSlide::EncoderState::READY);
