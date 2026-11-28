@@ -520,7 +520,7 @@ TEST_CASE("EncoderDesc carries the caller's attributes and the encoder's named d
     CHECK(desc.attributes.version == 0);
     STATIC_CHECK(IrisSlide::QUALITY_DEFAULT == 90);
     STATIC_CHECK(IrisSlide::SUBSAMPLE_DEFAULT == IrisSlide::SUBSAMPLE_422);
-    STATIC_CHECK(IrisSlide::MEMORY_BUDGET_DEFAULT == 0);   // 0 asks the encoder for a quarter of physical memory
+    STATIC_CHECK(IrisSlide::MEMORY_BUDGET_DEFAULT == 0);   // 0 asks the encoder for half of physical memory
     STATIC_CHECK(IrisSlide::LAYER_STEP_DEFAULT == 2);
     // EncoderEffort_5.7 (decided 2026-11-27): how hard the encoder works, the fastest by default.
     STATIC_CHECK(IrisSlide::EFFORT_MIN == 0);
