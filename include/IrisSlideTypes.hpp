@@ -311,7 +311,7 @@ constexpr std::uint32_t LAYER_STEP_DEFAULT  = 2;
 /// physical memory (decided 2026-11-27): the encoder reads the machine, so the header names no size.
 constexpr std::uint64_t MEMORY_BUDGET_DEFAULT = 0;
 /// How hard the encoder works on each tile, from EFFORT_MIN, the fastest, to EFFORT_MAX, the
-/// slowest and smallest at the same quality (decided 2026-11-27, Av1TileEncode_27). An encoding
+/// slowest and smallest at the same quality (decided 2026-11-27, EncoderEffort_5.7). An encoding
 /// with a speed setting (AV1) takes the whole range; one without (JPEG) takes EFFORT_MIN alone.
 using               Effort                  = std::uint8_t;
 constexpr Effort    EFFORT_MIN              = 0;
@@ -327,7 +327,7 @@ struct IRIS_EXPORT EncoderDesc {
     std::filesystem::path destination;                    ///< the folder the .iris file is written to
     Encoding        encoding      = TILE_ENCODING_JPEG;   ///< the IFE tile encoding written
     Quality         quality       = QUALITY_DEFAULT;      ///< tile quality, 1-100
-    Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< chroma subsampling (AV1 tiles: 4:2:0 alone)
+    Subsampling     subsampling   = SUBSAMPLE_DEFAULT;    ///< chroma subsampling; AV1 tiles are 4:2:0 alone, and Iris-Slide's encoder refuses another for them
     std::uint64_t   memory_budget = MEMORY_BUDGET_DEFAULT;   ///< bytes held at once; MEMORY_BUDGET_DEFAULT is a quarter of physical memory
     std::uint32_t   concurrency   = std::max(1u, std::thread::hardware_concurrency());   ///< worker threads, at least 1
     /// The scale between written layers: 2, 4, 8 … Layers are derived 2x at a time and every
